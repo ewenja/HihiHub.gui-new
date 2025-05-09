@@ -240,7 +240,7 @@ function tab:createGroup(__p, __gName)
     groupCount -= 1
 
     _a1.Name = "grp_" .. tostring(math.random(1,99999))
-    _a1.Parent = newTab[__p]
+    _a1.Parent = newTab
     _a1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     _a1.BorderSizePixel = 0
     _a1.Size = UDim2.new(0, 211, 0, 8)
