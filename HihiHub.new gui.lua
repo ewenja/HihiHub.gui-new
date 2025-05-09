@@ -227,9 +227,7 @@ end)
 local tab = {}
 local groupCount = 0
 local jigCount = 0
-local topStuff = 2000
-local groupbox = _a1 
-local grouper = _a2  
+local topStuff = 2000 
 function tab:createGroup(__p, __gName)
     local _a1 = Instance.new("Frame")
     local _a2 = Instance.new("Frame")
@@ -237,7 +235,8 @@ function tab:createGroup(__p, __gName)
     local _a4 = Instance.new("UIPadding")
     local _a5 = Instance.new("Frame")
     local _a6 = Instance.new("TextLabel")
-
+    local groupbox = _a1 
+    local grouper = _a2  
     groupCount -= 1
 
     _a1.Name = "grp_" .. tostring(math.random(1,99999))
