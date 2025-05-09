@@ -228,7 +228,8 @@ local tab = {}
 local groupCount = 0
 local jigCount = 0
 local topStuff = 2000
- 
+local groupbox = _a1 
+local grouper = _a2  
 function tab:createGroup(__p, __gName)
     local _a1 = Instance.new("Frame")
     local _a2 = Instance.new("Frame")
