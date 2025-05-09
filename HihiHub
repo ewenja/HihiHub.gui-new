@@ -870,6 +870,7 @@ end)
 library.flags[args.flag] = args.value or args.default
 library.options[args.flag] = { type = "slider", changeState = updateValue, skipflag = args.skipflag, oldargs = args }
 updateValue(args.value or args.default)
+function group:addTextbox(args)
 if not args.flag then return warn("⚠️ incorrect arguments ⚠️") end
 groupbox.Size += UDim2.new(0, 0, 0, 35)
 
