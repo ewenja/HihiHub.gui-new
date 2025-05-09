@@ -128,13 +128,21 @@ repeat
  menu.Parent = game:GetService("CoreGui")
  
  LPH_NO_VIRTUALIZE(function()
- function library:AddToRegistry(Instance, Properties, IsHud)
+function library:AddToRegistry(Instance, Properties, IsHud)
     local Idx = #library.Registry + 3
-    local Data = {Instance = Instance;Properties = Properties;Idx = Idx}
-    table.insert(library.Registry, Data);
-    library.RegistryMap[Instance] = Data;
-    if IsHud then table.insert(library.HudRegistry, Data) end;
-    end;
+    local Data = {
+        Instance = Instance,
+        Properties = Properties,
+        Idx = Idx
+    }
+
+    table.insert(library.Registry, Data)
+    library.RegistryMap[Instance] = Data
+
+    if IsHud then
+        table.insert(library.HudRegistry, Data)
+    end
+end
     function library:CreateLabel(Properties, IsHud)
  local _Instance = library:Create('TextLabel', {BackgroundTransparency = 1;Font = Enum.Font.Code;TextColor3 = library.Colors.FontColor;TextSize = 16;TextStrokeTransparency = 0});
  library:AddToRegistry(_Instance, {TextColor3 = 'FontColor'}, IsHud);
@@ -1776,81 +1784,131 @@ end
  
 --// Configs
 function contains(list, x)
-   for _, v in pairs(list) do
-if v == x then return true end
-end return false end
+	for _, v in pairs(list) do
+		if v == x then return true end
+	end
+	return false
+end
+
 function library:createConfig()
-   makefolder("HihiHub")
-   local name = library.flags["config_name"]
-   if contains(library.options["config_box"].values, name) then return library:Notify(name..".cfg already exists!", 5) end
-   if name == "" then return library:Notify("You need to put a name in!", 5) end
-   local jig = {}
-   for i,v in next, library.flags do
-if library.options[i].skipflag then continue end
-if typeof(v) == "Color3" then jig[i] = {v.R,v.G,v.B}
-   elseif typeof(v) == "EnumItem" then jig[i] = {string.split(tostring(v),".")[2],string.split(tostring(v),".")[3]}
-   else jig[i] = v
-   end
+	makefolder("HihiHub")
+	local name = library.flags["config_name"]
+	if contains(library.options["config_box"].values, name) then
+		return library:Notify(name..".cfg already exists!", 5)
+	end
+	if name == "" then
+		return library:Notify("You need to put a name in!", 5)
+	end
+
+	local jig = {}
+	for i,v in next, library.flags do
+		if library.options[i].skipflag then continue end
+		if typeof(v) == "Color3" then
+			jig[i] = {v.R, v.G, v.B}
+		elseif typeof(v) == "EnumItem" then
+			jig[i] = {string.split(tostring(v), ".")[2], string.split(tostring(v), ".")[3]}
+		else
+			jig[i] = v
+		end
+	end
+
+	writefile("HihiHub/"..name..".cfg", game:GetService("HttpService"):JSONEncode(jig))
+	library:Notify("Successfully created config "..name..".cfg!", 5)
+	library:refreshConfigs()
 end
-writefile("HihiHub/"..name..".cfg",game:GetService("HttpService"):JSONEncode(jig))
-library:Notify("Succesfully created config "..name..".cfg!", 5)
-library:refreshConfigs()
-   end
- 
-   function library:saveConfig()
-makefolder("HihiHub")
-local name = library.flags["config_box"]
-local jig = {}
-for i,v in next, library.flags do
-   if library.options[i].skipflag then continue end
-   if typeof(v) == "Color3" then jig[i] = {v.R,v.G,v.B}
-elseif typeof(v) == "EnumItem" then jig[i] = {string.split(tostring(v),".")[2],string.split(tostring(v),".")[3]}
-else jig[i] = v
-   end;end
-   writefile(name,game:GetService("HttpService"):JSONEncode(jig))
-   library:Notify("Succesfully updated config "..name..".cfg!", 5)
-   library:refreshConfigs()
+
+function library:saveConfig()
+	makefolder("HihiHub")
+	local name = library.flags["config_box"]
+	local jig = {}
+	for i,v in next, library.flags do
+		if library.options[i].skipflag then continue end
+		if typeof(v) == "Color3" then
+			jig[i] = {v.R, v.G, v.B}
+		elseif typeof(v) == "EnumItem" then
+			jig[i] = {string.split(tostring(v), ".")[2], string.split(tostring(v), ".")[3]}
+		else
+			jig[i] = v
+		end
+	end
+	writefile(name, game:GetService("HttpService"):JSONEncode(jig))
+	library:Notify("Successfully updated config "..name..".cfg!", 5)
+	library:refreshConfigs()
 end
- 
+
 function library:loadConfig()
-   local name = library.flags["config_box"]
-   if not isfile(name) then
-library:Notify("Config file not found!")
-return end
-local config = game:GetService("HttpService"):JSONDecode(readfile(name))
-for i,v in next, library.options do
-   spawn(function()pcall(function()
-   if config[i] then
-if v.type == "colorpicker" then v.changeState(Color3.new(config[i][1],config[i][2],config[i][3]))
-   elseif v.type == "keybind" then v.changeState(Enum[config[i][1]][config[i][2]])
-   else
-if config[i] ~= library.flags[i] then v.changeState(config[i]) end
-   end
-else
-   if v.type == "toggle" then v.changeState(false) v.riskcfg(v.risky)
-elseif v.type == "slider" then v.changeState(v.args.value or 0) v.riskcfg(v.risky)
-elseif v.type == "textbox" or v.type == "list" or v.type == "cfg" then v.changeState(v.args.value or v.args.text or "")
-elseif v.type == "colorpicker" then v.changeState(v.args.color or Color3.new(1,1,1))
-elseif v.type == "list" then v.changeState("")
-elseif v.type == "keybind" then v.changeState(v.args.key or Enum.KeyCode.Unknown)
+	local name = library.flags["config_box"]
+	if not isfile(name) then
+		library:Notify("Config file not found!")
+		return
+	end
+
+	local config = game:GetService("HttpService"):JSONDecode(readfile(name))
+
+	for i,v in next, library.options do
+		task.spawn(function()
+			local success, err = pcall(function()
+				if config[i] then
+					if v.type == "colorpicker" then
+						v.changeState(Color3.new(config[i][1], config[i][2], config[i][3]))
+					elseif v.type == "keybind" then
+						if typeof(config[i]) == "table" and #config[i] == 2 then
+							local succ, result = pcall(function()
+								return Enum[config[i][1]][config[i][2]]
+							end)
+							if succ then
+								v.changeState(result)
+							end
+						end
+						if config[i] ~= library.flags[i] then
+							v.changeState(config[i])
+						end
+					else
+						if config[i] ~= library.flags[i] then
+							v.changeState(config[i])
+						end
+					end
+				else
+					if v.type == "toggle" then
+						v.changeState(false)
+						v.riskcfg(v.risky)
+					elseif v.type == "slider" then
+						v.changeState(v.args.value or 0)
+						v.riskcfg(v.risky)
+					elseif v.type == "textbox" or v.type == "list" or v.type == "cfg" then
+						v.changeState(v.args.value or v.args.text or "")
+					elseif v.type == "colorpicker" then
+						v.changeState(v.args.color or Color3.new(1, 1, 1))
+					elseif v.type == "list" then
+						v.changeState("")
+					elseif v.type == "keybind" then
+						v.changeState(v.args.key or Enum.KeyCode.Unknown)
+					end
+				end
+			end)
+
+			if not success then
+				warn("⚠️ Error loading config value for " .. i .. ": " .. tostring(err))
+			end
+		end)
+	end
+
+	library:Notify("Successfully loaded config "..name..".cfg!", 5)
 end
-   end
-   end)
-   end)
+
+function library:deleteConfig()
+	if isfile(library.flags["config_box"]) then
+		delfile(library.flags["config_box"])
+		library:refreshConfigs()
+	end
 end
-library:Notify("Succesfully loaded config "..name..".cfg!", 5)
-   end
- 
-   function library:deleteConfig()
-if isfile(library.flags["config_box"]) then delfile(library.flags["config_box"])
-library:refreshConfigs()
-end;end
- 
+
 function library:refreshConfigs()
-   local tbl = {}
-   for i,v in next, listfiles("HihiHub") do table.insert(tbl,v) end
-   library.options["config_box"].refresh(tbl)
+	local tbl = {}
+	for i,v in next, listfiles("HihiHub") do
+		table.insert(tbl, v)
+	end
+	library.options["config_box"].refresh(tbl)
 end
-end)()
 
 return library
