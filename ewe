@@ -31,8 +31,8 @@ repeat
  local tabviewer = menu.bg.bg.bg.bg.bg.bg.tabbuttons
  
  local library = {
-    Title = 'anti.font color="rgb(245, 66, 230)">solutions</font> | <font color="rgb(245, 66, 230)">Pre-Build</font>',
-    Build = 'build: <font color="rgb(245, 66, 230)"> Unknown </font>',
+    Title = '<font color="rgb(245, 66, 230)">HihiHub</font> | <font color="rgb(245, 66, 230)">Build</font>',
+    Build = 'build: <font color="rgb(245, 66, 230)"> HihiHub UI v1.0 </font>',
     AnimatedText = false,
     keybind = Enum.KeyCode.End,
     Colors = {
