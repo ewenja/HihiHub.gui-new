@@ -122,7 +122,9 @@ repeat
     end
  end) 
  
- menu.bg.Position = UDim2.new(0.5,-menu.bg.Size.X.Offset/2,0.5,-menu.bg.Size.Y.Offset/2)
+ if menu and menu:FindFirstChild("bg") and menu.bg.Size then
+     menu.bg.Position = UDim2.new(0.5, -menu.bg.Size.X.Offset / 2, 0.5, -menu.bg.Size.Y.Offset / 2)
+ end
  menu.Parent = game:GetService("CoreGui")
  
  LPH_NO_VIRTUALIZE(function()
