@@ -955,6 +955,93 @@ library.options[args.flag] = {
     skipflag = args.skipflag,
     oldargs = args
 }
+function group:addList(args)
+    if not args.flag or not args.values then
+        return warn("⚠️ incorrect arguments ⚠️ - list flag/values missing")
+    end
+
+    groupbox.Size += UDim2.new(0, 0, 0, 35)
+    library.multiZindex -= 1
+
+    local _list = Instance.new("Frame")
+    local _holder = Instance.new("Frame")
+    local _button = Instance.new("TextButton")
+    local _label = Instance.new("TextLabel")
+    local _dropdown = Instance.new("Frame")
+    local _layout = Instance.new("UIListLayout")
+
+    _list.Parent = grouper
+    _list.BackgroundTransparency = 1
+    _list.Size = UDim2.new(1, 0, 0, 35)
+
+    _label.Parent = _list
+    _label.BackgroundTransparency = 1
+    _label.Position = UDim2.new(0.02, -1, 0, 7)
+    _label.Font = Enum.Font.Code
+    _label.Text = args.text or args.flag
+    _label.TextColor3 = Color3.fromRGB(244, 244, 244)
+    _label.TextSize = 13
+    _label.TextStrokeTransparency = 0
+    _label.TextXAlignment = Enum.TextXAlignment.Left
+
+    _holder.Parent = _list
+    _holder.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    _holder.BorderColor3 = Color3.fromRGB(2, 2, 2)
+    _holder.BorderSizePixel = 2
+    _holder.Position = UDim2.new(0.02, -1, 0, 20)
+    _holder.Size = UDim2.new(0, 205, 0, 15)
+
+    _button.Parent = _holder
+    _button.BackgroundTransparency = 1
+    _button.Size = UDim2.new(1, 0, 1, 0)
+    _button.Font = Enum.Font.Code
+    _button.Text = args.values[1]
+    _button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    _button.TextSize = 13
+    _button.TextStrokeTransparency = 0
+
+    _dropdown.Parent = _holder
+    _dropdown.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+    _dropdown.Position = UDim2.new(0, 0, 1, 2)
+    _dropdown.Size = UDim2.new(1, 0, 0, #args.values * 20)
+    _dropdown.Visible = false
+    _dropdown.BorderSizePixel = 1
+    _dropdown.ZIndex = 10
+    _layout.Parent = _dropdown
+    _layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    for _, v in ipairs(args.values) do
+        local opt = Instance.new("TextButton")
+        opt.Parent = _dropdown
+        opt.Size = UDim2.new(1, 0, 0, 20)
+        opt.BackgroundTransparency = 1
+        opt.Font = Enum.Font.Code
+        opt.Text = v
+        opt.TextColor3 = Color3.fromRGB(200, 200, 200)
+        opt.TextSize = 13
+        opt.TextStrokeTransparency = 0
+
+        opt.MouseButton1Click:Connect(function()
+            library.flags[args.flag] = v
+            _button.Text = v
+            _dropdown.Visible = false
+            if args.callback then args.callback(v) end
+        end)
+    end
+
+    _button.MouseButton1Click:Connect(function()
+        _dropdown.Visible = not _dropdown.Visible
+    end)
+
+    table.insert(library.toInvis, _dropdown)
+    library.flags[args.flag] = args.values[1]
+    library.options[args.flag] = {
+        type = "list",
+        changeState = function(v) _button.Text = v end,
+        skipflag = args.skipflag,
+        oldargs = args
+    }
+end
 if not args.flag or not args.values then return warn("⚠️ incorrect arguments ⚠️") end
 groupbox.Size += UDim2.new(0, 0, 0, 34)
 library.multiZindex -= 1
