@@ -1,5 +1,5 @@
-if (game:GetService("CoreGui")):FindFirstChild("NoxHub") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
-	(game:GetService("CoreGui")).NoxHub:Destroy();
+if (game:GetService("CoreGui")):FindFirstChild("HihiHub") and (game:GetService("CoreGui")):FindFirstChild("ScreenGui") then
+	(game:GetService("CoreGui")).HihiHub:Destroy();
 	(game:GetService("CoreGui")).ScreenGui:Destroy();
 end;
 _G.Primary = Color3.fromRGB(100, 100, 100);
@@ -75,7 +75,7 @@ ImageButton.AutoButtonColor = false;
 MakeDraggable(ImageButton, OutlineButton);
 CreateRounded(ImageButton, 10);
 ImageButton.MouseButton1Click:connect(function()
-	(game.CoreGui:FindFirstChild("NoxHub")).Enabled = not (game.CoreGui:FindFirstChild("NoxHub")).Enabled;
+	(game.CoreGui:FindFirstChild("HihiHub")).Enabled = not (game.CoreGui:FindFirstChild("HihiHub")).Enabled;
 end);
 local NotificationFrame = Instance.new("ScreenGui");
 NotificationFrame.Name = "NotificationFrame";
@@ -134,7 +134,7 @@ function Update:Notify(desc)
 	Title.Position = UDim2.new(0, 55, 0, 14);
 	Title.Size = UDim2.new(0, 10, 0, 20);
 	Title.Font = Enum.Font.GothamBold;
-	Title.Text = "NoxHub";
+	Title.Text = "HihiHub";
 	Title.TextColor3 = Color3.fromRGB(255, 255, 255);
 	Title.TextSize = 16;
 	Title.TextXAlignment = Enum.TextXAlignment.Left;
@@ -184,7 +184,7 @@ function Update:StartLoad()
 	MainLoaderFrame.BorderSizePixel = 0;
 	local TitleLoader = Instance.new("TextLabel");
 	TitleLoader.Parent = MainLoaderFrame;
-	TitleLoader.Text = "NoxHub";
+	TitleLoader.Text = "HihiHub";
 	TitleLoader.Font = Enum.Font.FredokaOne;
 	TitleLoader.TextSize = 50;
 	TitleLoader.TextColor3 = Color3.fromRGB(255, 255, 255);
@@ -260,16 +260,16 @@ local SettingsLib = {
 };
 (getgenv()).LoadConfig = function()
 	if readfile and writefile and isfile and isfolder then
-		if not isfolder("NoxHub") then
-			makefolder("NoxHub");
+		if not isfolder("HihiHub") then
+			makefolder("HihiHub");
 		end;
-		if not isfolder("NoxHub/Library/") then
-			makefolder("NoxHub/Library/");
+		if not isfolder("HihiHub/Library/") then
+			makefolder("HihiHub/Library/");
 		end;
-		if not isfile(("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
-			writefile("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
+		if not isfile(("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+			writefile("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(SettingsLib));
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
 			for i, v in pairs(Decode) do
 				SettingsLib[i] = v;
 			end;
@@ -281,15 +281,15 @@ local SettingsLib = {
 end;
 (getgenv()).SaveConfig = function()
 	if readfile and writefile and isfile and isfolder then
-		if not isfile(("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
+		if not isfile(("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json")) then
 			(getgenv()).Load();
 		else
-			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
+			local Decode = (game:GetService("HttpService")):JSONDecode(readfile("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json"));
 			local Array = {};
 			for i, v in pairs(SettingsLib) do
 				Array[i] = v;
 			end;
-			writefile("NoxHub/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
+			writefile("HihiHub/Library/" .. game.Players.LocalPlayer.Name .. ".json", (game:GetService("HttpService")):JSONEncode(Array));
 		end;
 	else
 		return warn("Status : Undetected Executor");
@@ -320,13 +320,13 @@ function Update:Window(Config)
 	local currentpage = "";
 	local keybind = keybind or Enum.KeyCode.RightControl;
 	local yoo = string.gsub(tostring(keybind), "Enum.KeyCode.", "");
-	local NoxHub = Instance.new("ScreenGui");
-	NoxHub.Name = "NoxHub";
-	NoxHub.Parent = game.CoreGui;
-	NoxHub.DisplayOrder = 999;
+	local HihiHub = Instance.new("ScreenGui");
+	HihiHub.Name = "HihiHub";
+	HihiHub.Parent = game.CoreGui;
+	HihiHub.DisplayOrder = 999;
 	local OutlineMain = Instance.new("Frame");
 	OutlineMain.Name = "OutlineMain";
-	OutlineMain.Parent = NoxHub;
+	OutlineMain.Parent = HihiHub;
 	OutlineMain.ClipsDescendants = true;
 	OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5);
 	OutlineMain.BackgroundColor3 = Color3.fromRGB(30, 30, 30);
@@ -378,7 +378,7 @@ function Update:Window(Config)
 	NameHub.AnchorPoint = Vector2.new(0, 0.5);
 	NameHub.Size = UDim2.new(0, 1, 0, 25);
 	NameHub.Font = Enum.Font.GothamBold;
-	NameHub.Text = "NoxHub";
+	NameHub.Text = "HihiHub";
 	NameHub.TextSize = 20;
 	NameHub.TextColor3 = Color3.fromRGB(255, 255, 255);
 	NameHub.TextXAlignment = Enum.TextXAlignment.Left;
@@ -411,7 +411,7 @@ function Update:Window(Config)
 	CloseButton.ImageColor3 = Color3.fromRGB(245, 245, 245);
 	CreateRounded(CloseButton, 3);
 	CloseButton.MouseButton1Click:connect(function()
-		(game.CoreGui:FindFirstChild("NoxHub")).Enabled = not (game.CoreGui:FindFirstChild("NoxHub")).Enabled;
+		(game.CoreGui:FindFirstChild("HihiHub")).Enabled = not (game.CoreGui:FindFirstChild("HihiHub")).Enabled;
 	end);
 	local ResizeButton = Instance.new("ImageButton");
 	ResizeButton.Name = "ResizeButton";
@@ -608,8 +608,8 @@ function Update:Window(Config)
 		(getgenv()).SaveConfig();
 	end);
 	CreateButton("Reset Config", function()
-		if isfolder("NoxHub") then
-			delfolder("NoxHub");
+		if isfolder("HihiHub") then
+			delfolder("HihiHub");
 		end;
 		Update:Notify("Config has been reseted!");
 	end);
@@ -672,7 +672,7 @@ function Update:Window(Config)
 	MakeDraggable(Top, OutlineMain);
 	UserInputService.InputBegan:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Insert then
-			(game.CoreGui:FindFirstChild("NoxHub")).Enabled = not (game.CoreGui:FindFirstChild("NoxHub")).Enabled;
+			(game.CoreGui:FindFirstChild("HihiHub")).Enabled = not (game.CoreGui:FindFirstChild("HihiHub")).Enabled;
 		end;
 	end);
 	local Dragging = false;
