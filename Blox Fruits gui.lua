@@ -7,7 +7,7 @@ _G.Dark = Color3.fromRGB(22, 22, 26);
 _G.Third = Color3.fromRGB(255, 0, 0);
 function CreateRounded(Parent, Size)
 	local Rounded = Instance.new("UICorner");
-	Rounded.Name = "Rounded";
+	Rounded.Name = "Rounded";f
 	Rounded.Parent = Parent;
 	Rounded.CornerRadius = UDim.new(0, Size);
 end;
@@ -326,7 +326,7 @@ function Update:Window(Config)
 	HihiHub.DisplayOrder = 999;
 	local OutlineMain = Instance.new("Frame");
 	OutlineMain.Name = "OutlineMain";
-	OutlineMain.Parent = HihiHub;
+	OutlineMain.Parent = ;
 	OutlineMain.ClipsDescendants = true;
 	OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5);
 	OutlineMain.BackgroundColor3 = Color3.fromRGB(30, 30, 30);
@@ -378,7 +378,7 @@ function Update:Window(Config)
 	NameHub.AnchorPoint = Vector2.new(0, 0.5);
 	NameHub.Size = UDim2.new(0, 1, 0, 25);
 	NameHub.Font = Enum.Font.GothamBold;
-	NameHub.Text = "HihiHub";
+	NameHub.Text = "";
 	NameHub.TextSize = 20;
 	NameHub.TextColor3 = Color3.fromRGB(255, 255, 255);
 	NameHub.TextXAlignment = Enum.TextXAlignment.Left;
@@ -411,7 +411,7 @@ function Update:Window(Config)
 	CloseButton.ImageColor3 = Color3.fromRGB(245, 245, 245);
 	CreateRounded(CloseButton, 3);
 	CloseButton.MouseButton1Click:connect(function()
-		(game.CoreGui:FindFirstChild("HihiHub")).Enabled = not (game.CoreGui:FindFirstChild("HihiHub")).Enabled;
+		(game.CoreGui:FindFirstChild("")).Enabled = not (game.CoreGui:FindFirstChild("")).Enabled;
 	end);
 	local ResizeButton = Instance.new("ImageButton");
 	ResizeButton.Name = "ResizeButton";
@@ -608,8 +608,8 @@ function Update:Window(Config)
 		(getgenv()).SaveConfig();
 	end);
 	CreateButton("Reset Config", function()
-		if isfolder("HihiHub") then
-			delfolder("HihiHub");
+		if isfolder("") then
+			delfolder("");
 		end;
 		Update:Notify("Config has been reseted!");
 	end);
@@ -672,7 +672,7 @@ function Update:Window(Config)
 	MakeDraggable(Top, OutlineMain);
 	UserInputService.InputBegan:Connect(function(input)
 		if input.KeyCode == Enum.KeyCode.Insert then
-			(game.CoreGui:FindFirstChild("HihiHub")).Enabled = not (game.CoreGui:FindFirstChild("HihiHub")).Enabled;
+			(game.CoreGui:FindFirstChild("")).Enabled = not (game.CoreGui:FindFirstChild("")).Enabled;
 		end;
 	end);
 	local Dragging = false;
@@ -1553,7 +1553,7 @@ function Update:Window(Config)
 			Sep1.Size = UDim2.new(0, 20, 0, 36);
 			Sep1.Font = Enum.Font.GothamBold;
 			Sep1.RichText = true;
-			Sep1.Text = "HihiHub<font color=\"rgb(255, 0, 0)\">HihiHub</font>";
+			Sep1.Text = "🛠️<font color=\"rgb(255, 0, 0)\">🛠️</font>";
 			Sep1.TextColor3 = Color3.fromRGB(255, 255, 255);
 			Sep1.TextSize = 14;
 			Sep2.Name = "Sep2";
@@ -1576,7 +1576,7 @@ function Update:Window(Config)
 			Sep3.Size = UDim2.new(0, 20, 0, 36);
 			Sep3.Font = Enum.Font.GothamBold;
 			Sep3.RichText = true;
-			Sep3.Text = "<font color=\"rgb(255, 0, 0)\">HihiHub</font>HihiHub";
+			Sep3.Text = "<font color=\"rgb(255, 0, 0)\">🛠️</font>🛠️";
 			Sep3.TextColor3 = Color3.fromRGB(255, 255, 255);
 			Sep3.TextSize = 14;
 		end;
