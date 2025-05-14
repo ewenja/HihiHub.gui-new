@@ -9,7 +9,7 @@ function CreateRounded(Parent, Size)
 	local Rounded = Instance.new("UICorner");
 	Rounded.Name = "Rounded";
 	Rounded.Parent = Parent;
-	Rounded.CornerRadius = UDim.new(30, Size);
+	Rounded.CornerRadius = UDim.new(1, Size);
 end;
 local UserInputService = game:GetService("UserInputService");
 local TweenService = game:GetService("TweenService");
