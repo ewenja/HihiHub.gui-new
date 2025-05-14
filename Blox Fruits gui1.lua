@@ -7,7 +7,7 @@ _G.Dark = Color3.fromRGB(22, 22, 26);
 _G.Third = Color3.fromRGB(255, 0, 0);
 function CreateRounded(Parent, Size)
 	local Rounded = Instance.new("UICorner");
-	Rounded.Name = "Rounded";f
+	Rounded.Name = "Rounded";
 	Rounded.Parent = Parent;
 	Rounded.CornerRadius = UDim.new(0, Size);
 end;
@@ -326,7 +326,7 @@ function Update:Window(Config)
 	HihiHub.DisplayOrder = 999;
 	local OutlineMain = Instance.new("Frame");
 	OutlineMain.Name = "OutlineMain";
-	OutlineMain.Parent = ;
+	OutlineMain.Parent = HihiHub;
 	OutlineMain.ClipsDescendants = true;
 	OutlineMain.AnchorPoint = Vector2.new(0.5, 0.5);
 	OutlineMain.BackgroundColor3 = Color3.fromRGB(30, 30, 30);
