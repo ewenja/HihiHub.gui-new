@@ -1,0 +1,39 @@
+local Watermark = Drawing.new("Text")
+Watermark.Text = "HihiHub"
+Watermark.Size = 20
+Watermark.Center = true
+Watermark.Outline = true
+Watermark.OutlineColor = Color3.fromRGB(0, 0, 0)
+Watermark.Color = Color3.fromRGB(255, 255, 255)
+
+-- 一執行就設為可見
+Watermark.Visible = true
+
+-- 初始位置
+local camera = workspace.CurrentCamera
+Watermark.Position = Vector2.new(
+    camera.ViewportSize.X / 2,
+    camera.ViewportSize.Y / 2 + 155
+)
+
+-- 閃爍動畫控制變數
+local isIncreasing = true
+local watermarkTransparency = 1
+
+-- 閃爍動畫循環
+game:GetService("RunService").RenderStepped:Connect(function()
+    if isIncreasing then
+        watermarkTransparency = watermarkTransparency + 0.02
+        if watermarkTransparency >= 1 then
+            isIncreasing = false
+        end
+    else
+        watermarkTransparency = watermarkTransparency - 0.02
+        if watermarkTransparency <= 0.3 then 
+            isIncreasing = true
+        end
+    end
+
+    Watermark.Transparency = watermarkTransparency
+    Watermark.Visible = true -- 保證一直顯示
+end)
