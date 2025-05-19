@@ -13,7 +13,7 @@ Watermark.Visible = true
 local camera = workspace.CurrentCamera
 Watermark.Position = Vector2.new(
     camera.ViewportSize.X / 2,
-    camera.ViewportSize.Y / 2 + 155
+    camera.ViewportSize.Y / 2 + 170
 )
 
 -- 閃爍動畫控制變數
