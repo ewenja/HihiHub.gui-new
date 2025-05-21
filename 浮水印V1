@@ -3,7 +3,7 @@ Watermark.Text = "HihiHub"
 Watermark.Size = 20
 Watermark.Center = true
 Watermark.Outline = true
-Watermark.OutlineColor = Color3.fromRGB(255, 4, 109)
+Watermark.OutlineColor = Color3.fromRGB(0,0,0)
 Watermark.Color = Color3.fromRGB(255, 113, 219)
 
 -- 一執行就設為可見
