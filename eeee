@@ -72,7 +72,6 @@ local function showHitmarker(hitPart, targetName, player, duration)
 			end
 		end
 
-		-- 建立文本
 		local tag = Drawing.new("Text") tag.Text = "[Hit]" tag.Color = Color3.new(1, 1, 1)
 		local name = Drawing.new("Text") name.Text = nameStr name.Color = Color3.fromRGB(255, 75, 75)
 		local part = Drawing.new("Text") part.Text = partStr part.Color = Color3.fromRGB(100, 200, 255)
@@ -89,14 +88,20 @@ local function showHitmarker(hitPart, targetName, player, duration)
 
 		local group = {tag, name, part, dist}
 		table.insert(notifications, group)
-		updateNotifications()
 
-		local index = table.find(notifications, group)
+		-- 排在最底，獲得當前 index
+		local index = #notifications
 		animateHorizontal(group, endX, index, false)
 
 		task.wait(duration or 2)
 
-		table.remove(notifications, index)
+		for i, g in ipairs(notifications) do
+			if g == group then
+				table.remove(notifications, i)
+				break
+			end
+		end
+
 		updateNotifications()
 
 		animateHorizontal(group, endX, 0, true)
@@ -106,6 +111,7 @@ local function showHitmarker(hitPart, targetName, player, duration)
 		end
 	end)
 end
+
 
 
 -- Hook once
