@@ -52,7 +52,6 @@ end
 local function showHitmarker(hitPart, targetName, player, duration)
 	if not Toggles or not Toggles.EnableHitmarker or not Toggles.EnableHitmarker.Value then return end
 
-	-- 限制最大通知數量
 	if #notifications >= maxNotifs then
 		local oldest = table.remove(notifications, 1)
 		for _, t in ipairs(oldest) do t:Remove() end
@@ -82,16 +81,19 @@ local function showHitmarker(hitPart, targetName, player, duration)
 		end
 
 		local group = {tag, name, part, dist}
-		local index = #notifications + 1
 		table.insert(notifications, group)
+		updateNotifications()
 
+		local index = table.find(notifications, group)
 		animateHorizontal(group, endX, index, false)
 		task.wait(duration or 2)
-		animateHorizontal(group, endX, index, true)
 
-		for _, txt in ipairs(group) do txt:Remove() end
+		-- 提前移除以避免位置錯誤
 		table.remove(notifications, index)
 		updateNotifications()
+
+		animateHorizontal(group, endX, index, true)
+		for _, txt in ipairs(group) do txt:Remove() end
 	end)
 end
 
