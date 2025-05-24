@@ -1,0 +1,133 @@
+local Players = game:GetService("Players")
+local GetPlayerFromCharacter = Players.GetPlayerFromCharacter
+local camera = workspace.CurrentCamera
+local notifications = {}
+
+-- Hitmarker 開關 (記得這個要在 UI 裡 LinoriaLib 加入 Toggle: EnableHitmarker)
+local Toggles = getgenv().Toggles or {}
+
+-- UI 設定
+local startX = -150
+local endX = 10
+local startY = 40
+local lineSpacing = 20
+local bounceOffset = 20
+
+-- 更新 Y 軸位置
+local function updateNotifications()
+	for i, group in ipairs(notifications) do
+		local y = startY + i * lineSpacing
+		for _, text in ipairs(group) do
+			text.Position = Vector2.new(text.Position.X, y)
+		end
+	end
+end
+
+-- 彈性動畫
+local function animateHorizontal(texts, targetX, index, isOut)
+	for t = 1, 10 do
+		local alpha = math.sin((t / 10) * math.pi * 0.5)
+		if isOut then alpha = 1 - alpha end
+		local offset = bounceOffset * (1 - alpha)
+		local x = isOut and (targetX + offset) or (startX + (targetX - startX) * alpha)
+		local y = startY + index * lineSpacing
+
+		texts[1].Position = Vector2.new(x, y)
+		texts[2].Position = Vector2.new(x + 38, y)
+		texts[3].Position = Vector2.new(x + 38 + #texts[2].Text * 7, y)
+		texts[4].Position = Vector2.new(x + 38 + #texts[2].Text * 7 + #texts[3].Text * 7 + 5, y)
+
+		task.wait(0.01)
+	end
+end
+
+-- 顯示 Hitmarker
+local function showHitmarker(hitPart, targetName, player, duration)
+	if Toggles.EnableHitmarker and not Toggles.EnableHitmarker.Value then return end
+
+	task.spawn(function()
+		local nameStr = tostring(targetName or "Unknown")
+		local partStr = tostring(hitPart or "UnknownPart")
+
+		-- 取距離
+		local distanceStr = ""
+		if player and player.Character then
+			local root = player.Character:FindFirstChild("HumanoidRootPart")
+			if root then
+				local dist = (camera.CFrame.Position - root.Position).Magnitude
+				distanceStr = string.format("%.1fm", dist)
+			end
+		end
+
+		-- 建立文字元件
+		local tag = Drawing.new("Text")
+		tag.Text = "[Hit]"
+		tag.Color = Color3.fromRGB(255, 255, 255)
+
+		local name = Drawing.new("Text")
+		name.Text = nameStr
+		name.Color = Color3.fromRGB(255, 75, 75)
+
+		local part = Drawing.new("Text")
+		part.Text = partStr
+		part.Color = Color3.fromRGB(100, 200, 255)
+
+		local dist = Drawing.new("Text")
+		dist.Text = distanceStr
+		dist.Color = Color3.fromRGB(100, 255, 100)
+
+		for _, txt in ipairs({tag, name, part, dist}) do
+			txt.Size = 14
+			txt.Font = 2
+			txt.Center = false
+			txt.Outline = true
+			txt.ZIndex = 3
+			txt.Visible = true
+		end
+
+		local group = {tag, name, part, dist}
+		local index = #notifications + 1
+		table.insert(notifications, group)
+
+		animateHorizontal(group, endX, index, false)
+		task.wait(duration or 2)
+		animateHorizontal(group, endX, index, true)
+
+		for _, txt in ipairs(group) do txt:Remove() end
+		table.remove(notifications, index)
+		updateNotifications()
+	end)
+end
+
+-- 擷取玩家物件
+local function getPlayerFromPart(part)
+	if typeof(part) == "Instance" and part:IsA("BasePart") then
+		local model = part:FindFirstAncestorOfClass("Model")
+		if model then
+			return GetPlayerFromCharacter(Players, model)
+		end
+	end
+	return nil
+end
+
+-- 攔截 ProjectileInflict 事件
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+	local args = { ... }
+	local method = getnamecallmethod()
+
+	if not checkcaller() and method == "FireServer" and self.Name == "ProjectileInflict" then
+		local hitPart = args[1]
+		local player = getPlayerFromPart(hitPart)
+		local targetName = player and player.Name or "Unknown"
+		local partName = typeof(hitPart) == "Instance" and hitPart.Name or "UnknownPart"
+
+		showHitmarker(partName, targetName, player, 3)
+
+		args[1] = partName
+	end
+
+	return oldNamecall(self, unpack(args))
+end)
+
+print("✅ Hitmarker 已載入，支援距離、動畫、Linoria 開關控制")
