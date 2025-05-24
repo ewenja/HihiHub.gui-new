@@ -50,7 +50,7 @@ local function getPlayerFromPart(part)
 end
 
 local function showHitmarker(hitPart, targetName, player, duration)
-	if not Toggles or not Toggles.EnableHitmarker or not Toggles.EnableHitmarker.Value then return end
+	if not Toggles or not Toggles.Hitlogs or not Toggles.Hitlogs.Value then return end
 
 	if #notifications >= maxNotifs then
 		local oldest = table.remove(notifications, 1)
