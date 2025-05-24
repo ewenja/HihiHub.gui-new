@@ -125,7 +125,6 @@ local function monitorPlayer(player)
 	end
 end
 
--- 初始化：注入 UI Toggle
 function EquippedESP:Init(injectedToggles)
 	Toggles = injectedToggles
 
@@ -141,23 +140,25 @@ function EquippedESP:Init(injectedToggles)
 		end
 	end)
 
-RunService.Stepped:Connect(function()
-	if not Toggles or not Toggles.EquippedESP then return end
+	RunService.Stepped:Connect(function()
+		if not Toggles or not Toggles.EquippedESP then return end
 
-	if not Toggles.EquippedESP.Value then
+		if not Toggles.EquippedESP.Value then
+			for _, player in ipairs(Players:GetPlayers()) do
+				if player ~= LocalPlayer and player.Character then
+					removeESP(player.Character)
+				end
+			end
+			return
+		end
+
 		for _, player in ipairs(Players:GetPlayers()) do
 			if player ~= LocalPlayer and player.Character then
-				removeESP(player.Character)
+				updateESPForCharacter(player.Character, player)
 			end
 		end
-		return
-	end
+	end)
+end 
 
-	for _, player in ipairs(Players:GetPlayers()) do
-		if player ~= LocalPlayer and player.Character then
-			updateESPForCharacter(player.Character, player)
-		end
-	end
-end)
 
 return EquippedESP
