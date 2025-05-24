@@ -3,23 +3,30 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
+local LocalPlayer = Players.LocalPlayer
 local SpiderMan = {}
 local Toggles = nil
-local UI = {}
 
--- 參數
+-- 設定
 local CLIMB_SPEED = 10
 local MAX_TIME = 1
+local COOLDOWN_TIME = 3
 
-local LocalPlayer = Players.LocalPlayer
+-- UI
+local UI = {
+    Gui = nil,
+    Bar = nil,
+    Fill = nil
+}
 
--- UI 初始化
 function UI:Init()
+    if self.Gui then return end
+
     local gui = Instance.new("ScreenGui")
     gui.Name = "SpiderManUI"
     gui.IgnoreGuiInset = true
     gui.ResetOnSpawn = false
-    gui.Parent = game:FindFirstChild("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    gui.Parent = game:FindFirstChild("CoreGui") or LocalPlayer:WaitForChild("PlayerGui")
 
     local bar = Instance.new("Frame", gui)
     bar.AnchorPoint = Vector2.new(0.5, 0)
@@ -37,11 +44,11 @@ function UI:Init()
     self.Fill = fill
 end
 
--- 主邏輯
 function SpiderMan:Start()
     UI:Init()
 
     local flyStartTime = nil
+    local cooldownEndTime = 0
 
     RunService.Heartbeat:Connect(function()
         if not Toggles or not Toggles.SpiderMan or not Toggles.SpiderMan.Value then
@@ -64,19 +71,20 @@ function SpiderMan:Start()
 
         local ray = Workspace:Raycast(foot.Position, root.CFrame.LookVector * 2.5, rayParams)
 
-        if ray then
+        if ray and tick() > cooldownEndTime then
             if not flyStartTime then
                 flyStartTime = tick()
             end
 
             local elapsed = tick() - flyStartTime
             if elapsed >= MAX_TIME then
+                cooldownEndTime = tick() + COOLDOWN_TIME
                 flyStartTime = nil
                 UI.Bar.Visible = false
                 return
             end
 
-            -- UI 更新
+            -- UI 條
             UI.Bar.Visible = true
             local progress = 1 - (elapsed / MAX_TIME)
             UI.Fill.Size = UDim2.new(progress, 0, 1, 0)
