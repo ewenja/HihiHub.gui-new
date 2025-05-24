@@ -1,10 +1,10 @@
 --Dont Skid
--- HitmarkerLib.lua
+-- Hitlogs.lua
 local Players = game:GetService("Players")
 local GetPlayerFromCharacter = Players.GetPlayerFromCharacter
 local camera = workspace.CurrentCamera
 
-local Hitmarker = {}
+local Hitlogs = {}
 local notifications = {}
 
 local Toggles = nil
@@ -50,8 +50,8 @@ local function getPlayerFromPart(part)
 	end
 end
 
-local function showHitmarker(hitPart, targetName, player, duration)
-	if not Toggles or not Toggles.EnableHitmarker or not Toggles.EnableHitmarker.Value then return end
+local function showHitlogs(hitPart, targetName, player, duration)
+	if not Toggles or not Toggles.Hitlogs or not Toggles.Hitlogs.Value then return end
 
 	-- 限制最大通知數量
 	if #notifications >= maxNotifs then
@@ -97,7 +97,7 @@ local function showHitmarker(hitPart, targetName, player, duration)
 end
 
 -- Hook once
-if not Hitmarker._hooked then
+if not Hitlogs._hooked then
 	local oldNamecall
 	oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
 		local args = { ... }
@@ -109,17 +109,17 @@ if not Hitmarker._hooked then
 			local targetName = player and player.Name or "Unknown"
 			local partName = typeof(hitPart) == "Instance" and hitPart.Name or "UnknownPart"
 
-			showHitmarker(partName, targetName, player, 3)
+			showHitlogs(partName, targetName, player, 3)
 			args[1] = partName
 		end
 
 		return oldNamecall(self, unpack(args))
 	end)
-	Hitmarker._hooked = true
+	Hitlogs._hooked = true
 end
 
-function Hitmarker:Init(externalToggles)
+function Hitlogs:Init(externalToggles)
 	Toggles = externalToggles
 end
 
-return Hitmarker
+return Hitlogs
