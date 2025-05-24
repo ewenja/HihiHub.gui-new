@@ -141,14 +141,24 @@ function EquippedESP:Init(injectedToggles)
 		end
 	end)
 
-	RunService.Stepped:Connect(function()
-		if not Toggles or not Toggles.EquippedESP or not Toggles.EquippedESP.Value then return end
+RunService.Stepped:Connect(function()
+	if not Toggles or not Toggles.EquippedESP then return end
+
+	if not Toggles.EquippedESP.Value then
+		-- ✅ 清除所有玩家的 ESP（當關閉開關時）
 		for _, player in ipairs(Players:GetPlayers()) do
 			if player ~= LocalPlayer and player.Character then
-				updateESPForCharacter(player.Character, player)
+				removeESP(player.Character)
 			end
 		end
-	end)
-end
+		return
+	end
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			updateESPForCharacter(player.Character, player)
+		end
+	end
+end)
 
 return EquippedESP
