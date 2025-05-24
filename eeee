@@ -52,9 +52,11 @@ end
 local function showHitmarker(hitPart, targetName, player, duration)
 	if not Toggles or not Toggles.Hitlogs or not Toggles.Hitlogs.Value then return end
 
+	-- 限制最大通知數量
 	if #notifications >= maxNotifs then
 		local oldest = table.remove(notifications, 1)
 		for _, t in ipairs(oldest) do t:Remove() end
+		updateNotifications()
 	end
 
 	task.spawn(function()
@@ -70,14 +72,19 @@ local function showHitmarker(hitPart, targetName, player, duration)
 			end
 		end
 
+		-- 建立文本
 		local tag = Drawing.new("Text") tag.Text = "[Hit]" tag.Color = Color3.new(1, 1, 1)
 		local name = Drawing.new("Text") name.Text = nameStr name.Color = Color3.fromRGB(255, 75, 75)
 		local part = Drawing.new("Text") part.Text = partStr part.Color = Color3.fromRGB(100, 200, 255)
 		local dist = Drawing.new("Text") dist.Text = distanceStr dist.Color = Color3.fromRGB(100, 255, 100)
 
 		for _, txt in ipairs({tag, name, part, dist}) do
-			txt.Size = 14 txt.Font = 2 txt.Center = false
-			txt.Outline = true txt.ZIndex = 3 txt.Visible = true
+			txt.Size = 14
+			txt.Font = 2
+			txt.Center = false
+			txt.Outline = true
+			txt.ZIndex = 3
+			txt.Visible = true
 		end
 
 		local group = {tag, name, part, dist}
@@ -86,16 +93,20 @@ local function showHitmarker(hitPart, targetName, player, duration)
 
 		local index = table.find(notifications, group)
 		animateHorizontal(group, endX, index, false)
+
 		task.wait(duration or 2)
 
-		-- 提前移除以避免位置錯誤
 		table.remove(notifications, index)
 		updateNotifications()
 
-		animateHorizontal(group, endX, index, true)
-		for _, txt in ipairs(group) do txt:Remove() end
+		animateHorizontal(group, endX, 0, true)
+
+		for _, txt in ipairs(group) do
+			txt:Remove()
+		end
 	end)
 end
+
 
 -- Hook once
 if not Hitmarker._hooked then
