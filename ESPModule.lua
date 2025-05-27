@@ -128,53 +128,55 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
--- 自動化 Box 尺寸（更精確範圍：Head → HumanoidRootPart 下緣）
-local headV2, headVisible = getV2(parts.Head or hrp)
-local rootV2, rootVisible = getV2(hrp)
+local head = parts.Head
+local foot = parts.RightFoot or parts.LeftFoot or parts.LowerTorso or hrp
 
-if headVisible and rootVisible then
-	local distance = (camera.CFrame.Position - hrp.Position).Magnitude
-	local scale = 1 / (distance * 0.07)
+if head and foot then
+	local headPos, headVisible = getV2(head)
+	local footPos, footVisible = getV2(foot)
 
-	local baseHeight = 280 -- 從 320 降低到 280，視覺上剛好踩地
-	local height = baseHeight * scale
-	local width = height / 1.6
+	if headVisible and footVisible then
+		local topY = math.min(headPos.Y, footPos.Y)
+		local botY = math.max(headPos.Y, footPos.Y)
 
-	local cx = rootV2.X
-	local cy = (headV2.Y + rootV2.Y) / 2 + 4 -- 中心微調往下 4px
+		local height = botY - topY
+		local width = height / 1.6
+		local cx = (headPos.X + footPos.X) / 2
+		local cy = (topY + botY) / 2
 
-	-- Box 顯示
-	if ESPModule.AllVars.box then
-		lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
-		lines.Box.Visible = true
-		lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
-		lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
-		lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
-		lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
+		-- Box 顯示
+		if ESPModule.AllVars.box then
+			lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
+			lines.Box.Visible = true
+			lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
+			lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
+			lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
+			lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
+		else
+			lines.Box.Visible = false
+		end
+
+		-- Healthbar
+		if ESPModule.AllVars.health then
+			local ratio = hum.Health / hum.MaxHealth
+			local left = cx - width / 2 - 5
+			lines.HealthBack.Visible = true
+			lines.HealthBack.From = Vector2.new(left, cy + height / 2)
+			lines.HealthBack.To = Vector2.new(left, cy - height / 2)
+
+			lines.HealthBar.Visible = true
+			lines.HealthBar.From = Vector2.new(left, cy + height / 2)
+			lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * ratio)
+			lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
+		else
+			lines.HealthBack.Visible = false
+			lines.HealthBar.Visible = false
+		end
 	else
 		lines.Box.Visible = false
-	end
-
-	-- Healthbar 同步
-	if ESPModule.AllVars.health then
-		local ratio = hum.Health / hum.MaxHealth
-		local left = cx - width / 2 - 5
-		lines.HealthBack.Visible = true
-		lines.HealthBack.From = Vector2.new(left, cy + height / 2)
-		lines.HealthBack.To = Vector2.new(left, cy - height / 2)
-
-		lines.HealthBar.Visible = true
-		lines.HealthBar.From = Vector2.new(left, cy + height / 2)
-		lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * ratio)
-		lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
-	else
 		lines.HealthBack.Visible = false
 		lines.HealthBar.Visible = false
 	end
-else
-	lines.Box.Visible = false
-	lines.HealthBack.Visible = false
-	lines.HealthBar.Visible = false
 end
 
 
