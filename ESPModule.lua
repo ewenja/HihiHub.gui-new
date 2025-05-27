@@ -1,11 +1,10 @@
--- ESPModule.lua
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local ESPModule = {}
 
--- 設定初始參數
+-- 初始化
 local camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
@@ -13,7 +12,6 @@ local DrawingESP = {}
 local ESPConnections = {}
 local TrackedPlayers = {}
 
--- 可由外部設置
 ESPModule.AllVars = {
 	espbool = false,
 	box = false,
@@ -25,7 +23,7 @@ ESPModule.AllVars = {
 ESPModule.BoxColor = Color3.fromRGB(0, 255, 100)
 ESPModule.SkeletonColor = Color3.fromRGB(0, 255, 255)
 
--- 建立繪圖元件
+-- 工具
 local function NewLine(color)
 	local l = Drawing.new("Line")
 	l.Visible = false
@@ -47,7 +45,6 @@ local function NewBox(color)
 	return b
 end
 
--- 清除所有 ESP
 local function clearAllESP()
 	for _, v in pairs(DrawingESP) do
 		if v.Remove then v:Remove() end
@@ -67,15 +64,16 @@ local function trackPlayer(plr, isAI)
 	if TrackedPlayers[plr] then return end
 	TrackedPlayers[plr] = true
 
-	local char = isAI and plr.Character or plr.Character
+	local char
 	if typeof(plr) == "table" and plr.IsAI then
 		isAI = true
 		char = plr.Character
+	else
+		char = plr.Character
 	end
 
-	if not char or not char:IsA("Model") then
-		return
-	end
+	if not (char and char:IsA("Model")) then return end
+
 	local lines = {
 		Box = NewBox(),
 		HealthBack = NewLine(Color3.new(0, 0, 0)),
@@ -98,17 +96,9 @@ local function trackPlayer(plr, isAI)
 
 	local renderConn
 	renderConn = RunService.RenderStepped:Connect(function()
-		char = isAI and plr.Character or plr.Character
-		local hum = char and char:FindFirstChildOfClass("Humanoid")
-		local hrp = char and char:FindFirstChild("HumanoidRootPart")
-
-		if not (char and hum and hrp and hum.Health > 0) then
-			for _, l in pairs(lines) do l.Visible = false end
-			return
-		end
-
-		local screenPos = camera:WorldToViewportPoint(hrp.Position)
-		if screenPos.Z <= 0 then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		local hrp = char:FindFirstChild("HumanoidRootPart")
+		if not (hum and hrp and hum.Health > 0) then
 			for _, l in pairs(lines) do l.Visible = false end
 			return
 		end
@@ -136,58 +126,47 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
--- 抓頭頂與腳底
-local head = parts.Head
-local foot = parts.RightFoot or parts.LeftFoot or parts.RightLowerLeg or parts.LeftLowerLeg or parts.LowerTorso or hrp
+		local head = parts.Head
+		local foot = parts.RightFoot or parts.LeftFoot or parts.LowerTorso or hrp
+		if head and foot then
+			local headV2, headVisible = getV2(head)
+			local footV2, footVisible = getV2(foot)
+			if headVisible and footVisible then
+				local topY = math.min(headV2.Y, footV2.Y)
+				local botY = math.max(headV2.Y, footV2.Y)
+				local height = botY - topY
+				local width = height / 1.6
+				local cx = (headV2.X + footV2.X) / 2
+				local cy = (topY + botY) / 2
 
-if head and foot then
-	local headV2, headOnScreen = getV2(head)
-	local footV2, footOnScreen = getV2(foot)
+				if ESPModule.AllVars.box then
+					lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
+					lines.Box.Visible = true
+					lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
+					lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
+					lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
+					lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
+				else
+					lines.Box.Visible = false
+				end
 
-	if headOnScreen and footOnScreen then
-		local topY = math.min(headV2.Y, footV2.Y)
-		local botY = math.max(headV2.Y, footV2.Y)
+				if ESPModule.AllVars.health then
+					local ratio = hum.Health / hum.MaxHealth
+					local left = cx - width / 2 - 5
+					lines.HealthBack.Visible = true
+					lines.HealthBack.From = Vector2.new(left, cy + height / 2)
+					lines.HealthBack.To = Vector2.new(left, cy - height / 2)
 
-		local height = botY - topY
-		local width = height / 1.9
-		local cx = (headV2.X + footV2.X) / 2
-		local cy = (topY + botY) / 2
-
-		-- Box 顯示
-		if ESPModule.AllVars.box then
-			lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
-			lines.Box.Visible = true
-			lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
-			lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
-			lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
-			lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
-		else
-			lines.Box.Visible = false
+					lines.HealthBar.Visible = true
+					lines.HealthBar.From = Vector2.new(left, cy + height / 2)
+					lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * ratio)
+					lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
+				else
+					lines.HealthBack.Visible = false
+					lines.HealthBar.Visible = false
+				end
+			end
 		end
-
-		-- Health bar
-		if ESPModule.AllVars.health then
-			local ratio = hum.Health / hum.MaxHealth
-			local left = cx - width / 2 - 5
-			lines.HealthBack.Visible = true
-			lines.HealthBack.From = Vector2.new(left, cy + height / 2)
-			lines.HealthBack.To = Vector2.new(left, cy - height / 2)
-
-			lines.HealthBar.Visible = true
-			lines.HealthBar.From = Vector2.new(left, cy + height / 2)
-			lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * ratio)
-			lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
-		else
-			lines.HealthBack.Visible = false
-			lines.HealthBar.Visible = false
-		end
-	else
-		lines.Box.Visible = false
-		lines.HealthBack.Visible = false
-		lines.HealthBar.Visible = false
-	end
-end
-
 
 		-- Skeleton
 		local function link(from, to, line)
@@ -246,7 +225,6 @@ local function trackAIModel(ai)
 					Character = ai,
 					IsAI = true
 				}, true)
-				print("[ESP] Tracked AI:", ai.Name)
 				return
 			end
 			task.wait(0.2)
@@ -254,7 +232,6 @@ local function trackAIModel(ai)
 	end)
 end
 
--- 啟用 ESP
 function ESPModule:Enable()
 	clearAllESP()
 
@@ -278,6 +255,7 @@ function ESPModule:Enable()
 			end
 			zone.ChildAdded:Connect(trackAIModel)
 		end
+
 		Workspace.AiZones.ChildAdded:Connect(function(newZone)
 			if newZone:IsA("Folder") then
 				newZone.ChildAdded:Connect(trackAIModel)
