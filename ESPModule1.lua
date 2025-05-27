@@ -128,38 +128,49 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
-		-- Box
-                local height, width = 160, 100
-		if ESPModule.AllVars.box then
-			lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
-			lines.Box.Visible = true
-			lines.Box.PointA = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
-			lines.Box.PointB = Vector2.new(screenPos.X + width / 2, screenPos.Y - height / 2)
-			lines.Box.PointC = Vector2.new(screenPos.X + width / 2, screenPos.Y + height / 2)
-			lines.Box.PointD = Vector2.new(screenPos.X - width / 2, screenPos.Y + height / 2)
-		else
-			lines.Box.Visible = false
-		end
+-- 計算 Box 大小（動態）
+local headV2, headVisible = getV2(parts.Head)
+local feetV2, feetVisible = getV2(parts.LowerTorso or hrp)
 
-		-- Health Bar
-		if ESPModule.AllVars.health then
-			local ratio = hum.Health / hum.MaxHealth
-			local left = screenPos.X - width / 2 - 5
-			local topY = screenPos.Y - height / 2
-			local botY = screenPos.Y + height / 2
+if headVisible and feetVisible then
+	local height = math.abs(headV2.Y - feetV2.Y)
+	local width = height / 1.6
+	local cx = screenPos.X
+	local cy = (headV2.Y + feetV2.Y) / 2
 
-			lines.HealthBack.Visible = true
-			lines.HealthBack.From = Vector2.new(left, botY)
-			lines.HealthBack.To = Vector2.new(left, topY)
+	if ESPModule.AllVars.box then
+		lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
+		lines.Box.Visible = true
+		lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
+		lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
+		lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
+		lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
+	else
+		lines.Box.Visible = false
+	end
 
-			lines.HealthBar.Visible = true
-			lines.HealthBar.From = Vector2.new(left, botY)
-			lines.HealthBar.To = Vector2.new(left, botY - (height * ratio))
-			lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
-		else
-			lines.HealthBack.Visible = false
-			lines.HealthBar.Visible = false
-		end
+	-- Health Bar 同步更新位置
+	if ESPModule.AllVars.health then
+		local ratio = hum.Health / hum.MaxHealth
+		local left = cx - width / 2 - 5
+		lines.HealthBack.Visible = true
+		lines.HealthBack.From = Vector2.new(left, cy + height / 2)
+		lines.HealthBack.To = Vector2.new(left, cy - height / 2)
+
+		lines.HealthBar.Visible = true
+		lines.HealthBar.From = Vector2.new(left, cy + height / 2)
+		lines.HealthBar.To = Vector2.new(left, cy + height / 2 - (height * ratio))
+		lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
+	else
+		lines.HealthBack.Visible = false
+		lines.HealthBar.Visible = false
+	end
+else
+	lines.Box.Visible = false
+	lines.HealthBack.Visible = false
+	lines.HealthBar.Visible = false
+end
+
 
 		-- Skeleton
 		local function link(from, to, line)
