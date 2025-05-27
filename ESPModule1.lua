@@ -136,7 +136,7 @@ if headVisible and rootVisible then
 	local distance = (camera.CFrame.Position - hrp.Position).Magnitude
 	local scale = 1 / (distance * 0.07) -- 距離縮放因子（可調整）
 
-	local height = 500 * scale -- 調整這個數值可以讓 box 剛好包住整個角色
+	local height = 320 * scale -- 調整這個數值可以讓 box 剛好包住整個角色
 	local width = height / 1.6
 	local cx = rootV2.X
 	local cy = (headV2.Y + rootV2.Y) / 2
