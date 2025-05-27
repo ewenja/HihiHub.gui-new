@@ -128,16 +128,19 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
--- 計算 Box 大小（動態）
-local headV2, headVisible = getV2(parts.Head)
-local feetV2, feetVisible = getV2(parts.LowerTorso or hrp)
+-- 動態 Box 尺寸計算
+local headV2, headOnScreen = getV2(parts.Head or parts.UpperTorso or hrp)
+local footV2, footOnScreen = getV2(parts.LowerTorso or parts.UpperTorso or hrp)
 
-if headVisible and feetVisible then
-	local height = math.abs(headV2.Y - feetV2.Y)
+if headOnScreen and footOnScreen then
+	local topY = math.min(headV2.Y, footV2.Y)
+	local botY = math.max(headV2.Y, footV2.Y)
+	local height = math.abs(topY - botY)
 	local width = height / 1.6
 	local cx = screenPos.X
-	local cy = (headV2.Y + feetV2.Y) / 2
+	local cy = (topY + botY) / 2
 
+	-- Box
 	if ESPModule.AllVars.box then
 		lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
 		lines.Box.Visible = true
@@ -149,7 +152,7 @@ if headVisible and feetVisible then
 		lines.Box.Visible = false
 	end
 
-	-- Health Bar 同步更新位置
+	-- Health bar 同步
 	if ESPModule.AllVars.health then
 		local ratio = hum.Health / hum.MaxHealth
 		local left = cx - width / 2 - 5
@@ -159,7 +162,7 @@ if headVisible and feetVisible then
 
 		lines.HealthBar.Visible = true
 		lines.HealthBar.From = Vector2.new(left, cy + height / 2)
-		lines.HealthBar.To = Vector2.new(left, cy + height / 2 - (height * ratio))
+		lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * ratio)
 		lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
 	else
 		lines.HealthBack.Visible = false
@@ -170,6 +173,7 @@ else
 	lines.HealthBack.Visible = false
 	lines.HealthBar.Visible = false
 end
+
 
 
 		-- Skeleton
