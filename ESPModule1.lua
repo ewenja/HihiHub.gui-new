@@ -128,14 +128,8 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
-		local headPos = parts.Head and getV2(parts.Head)
-		local ltPos = parts.LowerTorso and getV2(parts.LowerTorso)
-		local top = headPos or Vector2.new(screenPos.X, screenPos.Y - 50)
-		local bottom = ltPos or Vector2.new(screenPos.X, screenPos.Y + 50)
-		local height = math.abs(top.Y - bottom.Y) * 2
-		local width = height / 1.6
-
 		-- Box
+                local height, width = 160, 100
 		if ESPModule.AllVars.box then
 			lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
 			lines.Box.Visible = true
