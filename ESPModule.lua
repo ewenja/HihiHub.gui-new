@@ -6,24 +6,26 @@ local Workspace = game:GetService("Workspace")
 local ESPModule = {}
 
 -- 設定初始參數
-local camera = workspace.CurrentCamera
+local camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+
 local DrawingESP = {}
 local ESPConnections = {}
 local TrackedPlayers = {}
 
-ESPModule.BoxColor = Color3.fromRGB(0, 255, 100)
-ESPModule.SkeletonColor = Color3.fromRGB(0, 255, 255)
-
+-- 可由外部設置
 ESPModule.AllVars = {
 	espbool = false,
 	box = false,
-	health = false,
 	skeleton = false,
-	espbots = false,
+	health = false,
+	espbots = false
 }
 
--- 建立繪圖物件
+ESPModule.BoxColor = Color3.fromRGB(0, 255, 100)
+ESPModule.SkeletonColor = Color3.fromRGB(0, 255, 255)
+
+-- 建立繪圖元件
 local function NewLine(color)
 	local l = Drawing.new("Line")
 	l.Visible = false
@@ -45,7 +47,7 @@ local function NewBox(color)
 	return b
 end
 
--- 清除所有繪製的 ESP
+-- 清除所有 ESP
 local function clearAllESP()
 	for _, v in pairs(DrawingESP) do
 		if v.Remove then v:Remove() end
@@ -60,19 +62,17 @@ local function clearAllESP()
 	table.clear(TrackedPlayers)
 end
 
--- 主追蹤函數
+-- 主追蹤邏輯
 local function trackPlayer(plr, isAI)
 	if TrackedPlayers[plr] then return end
 	TrackedPlayers[plr] = true
 
 	local char = isAI and plr.Character or plr.Character
-
 	local lines = {
 		Box = NewBox(),
 		HealthBack = NewLine(Color3.new(0, 0, 0)),
-		HealthBar = NewLine(Color3.new(0, 255, 0)),
+		HealthBar = NewLine(Color3.fromRGB(0, 255, 0)),
 
-		-- Skeleton lines
 		SpineTop = NewLine(),
 		SpineMid = NewLine(),
 		LeftArm = NewLine(), LeftForearm = NewLine(), LeftHand = NewLine(),
@@ -88,8 +88,8 @@ local function trackPlayer(plr, isAI)
 		TrackedPlayers[plr] = nil
 	end
 
-	local conn
-	conn = RunService.RenderStepped:Connect(function()
+	local renderConn
+	renderConn = RunService.RenderStepped:Connect(function()
 		char = isAI and plr.Character or plr.Character
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -99,53 +99,83 @@ local function trackPlayer(plr, isAI)
 			return
 		end
 
-		local pos = camera:WorldToViewportPoint(hrp.Position)
-		if pos.Z <= 0 then
+		local screenPos = camera:WorldToViewportPoint(hrp.Position)
+		if screenPos.Z <= 0 then
 			for _, l in pairs(lines) do l.Visible = false end
 			return
 		end
 
-		local height, width = 160, 100
-		local cx, cy = pos.X, pos.Y
+		local function getV2(part)
+			local pos, onscreen = camera:WorldToViewportPoint(part.Position)
+			return Vector2.new(pos.X, pos.Y), onscreen
+		end
 
-		-- Box ESP
+		local parts = {
+			Head = char:FindFirstChild("Head"),
+			UpperTorso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"),
+			LowerTorso = char:FindFirstChild("LowerTorso"),
+			LeftUpperArm = char:FindFirstChild("LeftUpperArm"),
+			LeftLowerArm = char:FindFirstChild("LeftLowerArm"),
+			LeftHand = char:FindFirstChild("LeftHand"),
+			RightUpperArm = char:FindFirstChild("RightUpperArm"),
+			RightLowerArm = char:FindFirstChild("RightLowerArm"),
+			RightHand = char:FindFirstChild("RightHand"),
+			LeftUpperLeg = char:FindFirstChild("LeftUpperLeg"),
+			LeftLowerLeg = char:FindFirstChild("LeftLowerLeg"),
+			LeftFoot = char:FindFirstChild("LeftFoot"),
+			RightUpperLeg = char:FindFirstChild("RightUpperLeg"),
+			RightLowerLeg = char:FindFirstChild("RightLowerLeg"),
+			RightFoot = char:FindFirstChild("RightFoot")
+		}
+
+		local headPos = parts.Head and getV2(parts.Head)
+		local ltPos = parts.LowerTorso and getV2(parts.LowerTorso)
+		local top = headPos or Vector2.new(screenPos.X, screenPos.Y - 50)
+		local bottom = ltPos or Vector2.new(screenPos.X, screenPos.Y + 50)
+		local height = math.abs(top.Y - bottom.Y) * 2
+		local width = height / 1.6
+
+		-- Box
 		if ESPModule.AllVars.box then
 			lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
 			lines.Box.Visible = true
-			lines.Box.PointA = Vector2.new(cx - width / 2, cy - height / 2)
-			lines.Box.PointB = Vector2.new(cx + width / 2, cy - height / 2)
-			lines.Box.PointC = Vector2.new(cx + width / 2, cy + height / 2)
-			lines.Box.PointD = Vector2.new(cx - width / 2, cy + height / 2)
+			lines.Box.PointA = Vector2.new(screenPos.X - width / 2, screenPos.Y - height / 2)
+			lines.Box.PointB = Vector2.new(screenPos.X + width / 2, screenPos.Y - height / 2)
+			lines.Box.PointC = Vector2.new(screenPos.X + width / 2, screenPos.Y + height / 2)
+			lines.Box.PointD = Vector2.new(screenPos.X - width / 2, screenPos.Y + height / 2)
 		else
 			lines.Box.Visible = false
 		end
 
 		-- Health Bar
 		if ESPModule.AllVars.health then
-			local r = hum.Health / hum.MaxHealth
-			local left = cx - width / 2 - 5
+			local ratio = hum.Health / hum.MaxHealth
+			local left = screenPos.X - width / 2 - 5
+			local topY = screenPos.Y - height / 2
+			local botY = screenPos.Y + height / 2
+
 			lines.HealthBack.Visible = true
-			lines.HealthBack.From = Vector2.new(left, cy + height / 2)
-			lines.HealthBack.To = Vector2.new(left, cy - height / 2)
+			lines.HealthBack.From = Vector2.new(left, botY)
+			lines.HealthBack.To = Vector2.new(left, topY)
 
 			lines.HealthBar.Visible = true
-			lines.HealthBar.From = Vector2.new(left, cy + height / 2)
-			lines.HealthBar.To = Vector2.new(left, cy + height / 2 - height * r)
-			lines.HealthBar.Color = Color3.fromRGB(255 * (1 - r), 255 * r, 0)
+			lines.HealthBar.From = Vector2.new(left, botY)
+			lines.HealthBar.To = Vector2.new(left, botY - (height * ratio))
+			lines.HealthBar.Color = Color3.fromRGB(255 * (1 - ratio), 255 * ratio, 0)
 		else
 			lines.HealthBack.Visible = false
 			lines.HealthBar.Visible = false
 		end
 
 		-- Skeleton
-		local function draw(part1, part2, line)
-			if part1 and part2 then
-				local a, on1 = camera:WorldToViewportPoint(part1.Position)
-				local b, on2 = camera:WorldToViewportPoint(part2.Position)
-				if on1 and on2 then
+		local function link(from, to, line)
+			if from and to then
+				local a, ok1 = getV2(from)
+				local b, ok2 = getV2(to)
+				if ok1 and ok2 then
 					line.Visible = true
-					line.From = Vector2.new(a.X, a.Y)
-					line.To = Vector2.new(b.X, b.Y)
+					line.From = a
+					line.To = b
 					line.Color = ESPModule.SkeletonColor
 					return
 				end
@@ -154,38 +184,20 @@ local function trackPlayer(plr, isAI)
 		end
 
 		if ESPModule.AllVars.skeleton then
-			local p = {
-				Head = char:FindFirstChild("Head"),
-				UpperTorso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"),
-				LowerTorso = char:FindFirstChild("LowerTorso"),
-				LeftUpperArm = char:FindFirstChild("LeftUpperArm"),
-				LeftLowerArm = char:FindFirstChild("LeftLowerArm"),
-				LeftHand = char:FindFirstChild("LeftHand"),
-				RightUpperArm = char:FindFirstChild("RightUpperArm"),
-				RightLowerArm = char:FindFirstChild("RightLowerArm"),
-				RightHand = char:FindFirstChild("RightHand"),
-				LeftUpperLeg = char:FindFirstChild("LeftUpperLeg"),
-				LeftLowerLeg = char:FindFirstChild("LeftLowerLeg"),
-				LeftFoot = char:FindFirstChild("LeftFoot"),
-				RightUpperLeg = char:FindFirstChild("RightUpperLeg"),
-				RightLowerLeg = char:FindFirstChild("RightLowerLeg"),
-				RightFoot = char:FindFirstChild("RightFoot"),
-			}
-
-			draw(p.Head, p.UpperTorso, lines.SpineTop)
-			draw(p.UpperTorso, p.LowerTorso, lines.SpineMid)
-			draw(p.UpperTorso, p.LeftUpperArm, lines.LeftArm)
-			draw(p.LeftUpperArm, p.LeftLowerArm, lines.LeftForearm)
-			draw(p.LeftLowerArm, p.LeftHand, lines.LeftHand)
-			draw(p.UpperTorso, p.RightUpperArm, lines.RightArm)
-			draw(p.RightUpperArm, p.RightLowerArm, lines.RightForearm)
-			draw(p.RightLowerArm, p.RightHand, lines.RightHand)
-			draw(p.LowerTorso, p.LeftUpperLeg, lines.LeftLeg)
-			draw(p.LeftUpperLeg, p.LeftLowerLeg, lines.LeftShin)
-			draw(p.LeftLowerLeg, p.LeftFoot, lines.LeftFoot)
-			draw(p.LowerTorso, p.RightUpperLeg, lines.RightLeg)
-			draw(p.RightUpperLeg, p.RightLowerLeg, lines.RightShin)
-			draw(p.RightLowerLeg, p.RightFoot, lines.RightFoot)
+			link(parts.Head, parts.UpperTorso, lines.SpineTop)
+			link(parts.UpperTorso, parts.LowerTorso, lines.SpineMid)
+			link(parts.UpperTorso, parts.LeftUpperArm, lines.LeftArm)
+			link(parts.LeftUpperArm, parts.LeftLowerArm, lines.LeftForearm)
+			link(parts.LeftLowerArm, parts.LeftHand, lines.LeftHand)
+			link(parts.UpperTorso, parts.RightUpperArm, lines.RightArm)
+			link(parts.RightUpperArm, parts.RightLowerArm, lines.RightForearm)
+			link(parts.RightLowerArm, parts.RightHand, lines.RightHand)
+			link(parts.LowerTorso, parts.LeftUpperLeg, lines.LeftLeg)
+			link(parts.LeftUpperLeg, parts.LeftLowerLeg, lines.LeftShin)
+			link(parts.LeftLowerLeg, parts.LeftFoot, lines.LeftFoot)
+			link(parts.LowerTorso, parts.RightUpperLeg, lines.RightLeg)
+			link(parts.RightUpperLeg, parts.RightLowerLeg, lines.RightShin)
+			link(parts.RightLowerLeg, parts.RightFoot, lines.RightFoot)
 		else
 			for _, name in pairs({
 				"SpineTop", "SpineMid", "LeftArm", "LeftForearm", "LeftHand",
@@ -198,10 +210,10 @@ local function trackPlayer(plr, isAI)
 		end
 	end)
 
-	table.insert(ESPConnections, conn)
+	table.insert(ESPConnections, renderConn)
 end
 
--- AI NPC 支援
+-- AI 模型追蹤
 local function trackAIModel(ai)
 	if TrackedPlayers[ai] then return end
 	task.spawn(function()
@@ -215,7 +227,7 @@ local function trackAIModel(ai)
 	end)
 end
 
--- Public
+-- 啟用 ESP
 function ESPModule:Enable()
 	clearAllESP()
 
@@ -233,13 +245,13 @@ function ESPModule:Enable()
 	end)
 
 	if self.AllVars.espbots then
-		for _, zone in pairs(workspace:WaitForChild("AiZones"):GetChildren()) do
+		for _, zone in pairs(Workspace:WaitForChild("AiZones"):GetChildren()) do
 			for _, ai in pairs(zone:GetChildren()) do
 				trackAIModel(ai)
 			end
 			zone.ChildAdded:Connect(trackAIModel)
 		end
-		workspace.AiZones.ChildAdded:Connect(function(newZone)
+		Workspace.AiZones.ChildAdded:Connect(function(newZone)
 			if newZone:IsA("Folder") then
 				newZone.ChildAdded:Connect(trackAIModel)
 			end
