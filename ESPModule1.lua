@@ -128,20 +128,18 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
--- 動態 Box 尺寸計算
-local headV2, headOnScreen = getV2(parts.Head or parts.UpperTorso or hrp)
-local footV2, footOnScreen = getV2(parts.LowerTorso or parts.UpperTorso or hrp)
+-- 自動化 Box 尺寸（更精確範圍：Head → HumanoidRootPart 下緣）
+local headV2, headVisible = getV2(parts.Head or hrp)
+local rootV2, rootVisible = getV2(hrp)
 
-if headOnScreen and footOnScreen then
-	local topY = math.min(headV2.Y, footV2.Y)
-	local botY = math.max(headV2.Y, footV2.Y)
+if headVisible and rootVisible then
+	local distance = (camera.CFrame.Position - hrp.Position).Magnitude
+	local scale = 1 / (distance * 0.07) -- 距離縮放因子（可調整）
 
-	-- 調整倍率（預設倍率 = 1.25，可微調）
-	local scaleFactor = 1.25
-	local height = math.abs(topY - botY) * scaleFactor
-	local width = height / 1.5
-	local cx = screenPos.X
-	local cy = (topY + botY) / 2
+	local height = 230 * scale -- 調整這個數值可以讓 box 剛好包住整個角色
+	local width = height / 1.6
+	local cx = rootV2.X
+	local cy = (headV2.Y + rootV2.Y) / 2
 
 	-- Box
 	if ESPModule.AllVars.box then
@@ -155,7 +153,7 @@ if headOnScreen and footOnScreen then
 		lines.Box.Visible = false
 	end
 
-	-- Health bar 同步
+	-- Health Bar
 	if ESPModule.AllVars.health then
 		local ratio = hum.Health / hum.MaxHealth
 		local left = cx - width / 2 - 5
