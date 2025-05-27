@@ -217,9 +217,14 @@ end
 -- AI 模型追蹤
 local function trackAIModel(ai)
 	if TrackedPlayers[ai] then return end
+	if not ai:IsA("Model") then return end
+
 	task.spawn(function()
 		for i = 1, 30 do
-			if ai:FindFirstChild("Humanoid") and ai:FindFirstChild("HumanoidRootPart") then
+			local hum = ai:FindFirstChildOfClass("Humanoid")
+			local hrp = ai:FindFirstChild("HumanoidRootPart")
+			if hum and hrp then
+				print("[ESP] AI Loaded:", ai.Name)
 				trackPlayer({
 					Name = ai.Name,
 					Character = ai,
@@ -229,18 +234,21 @@ local function trackAIModel(ai)
 			end
 			task.wait(0.2)
 		end
+		warn("[ESP] 無法追蹤 AI: ", ai.Name)
 	end)
 end
 
 function ESPModule:Enable()
 	clearAllESP()
 
+	-- 玩家追蹤初始化
 	for _, p in pairs(Players:GetPlayers()) do
 		if p ~= LocalPlayer then
 			trackPlayer(p, false)
 		end
 	end
 
+	-- 新增玩家追蹤
 	Players.PlayerAdded:Connect(function(p)
 		p.CharacterAdded:Connect(function()
 			task.wait(0.5)
@@ -248,19 +256,27 @@ function ESPModule:Enable()
 		end)
 	end)
 
+	-- AI/NPC 初始化 + 持續監聽
 	if self.AllVars.espbots then
-		for _, zone in pairs(Workspace:WaitForChild("AiZones"):GetChildren()) do
-			for _, ai in pairs(zone:GetChildren()) do
-				trackAIModel(ai)
+		local aiZones = Workspace:FindFirstChild("AiZones")
+		if aiZones then
+			-- 初始化所有 AI 區域裡的 NPC
+			for _, zone in pairs(aiZones:GetChildren()) do
+				for _, ai in pairs(zone:GetChildren()) do
+					trackAIModel(ai)
+				end
+				zone.ChildAdded:Connect(trackAIModel)
 			end
-			zone.ChildAdded:Connect(trackAIModel)
-		end
 
-		Workspace.AiZones.ChildAdded:Connect(function(newZone)
-			if newZone:IsA("Folder") then
-				newZone.ChildAdded:Connect(trackAIModel)
-			end
-		end)
+			-- 新增 AI 區域的處理
+			aiZones.ChildAdded:Connect(function(newZone)
+				if newZone:IsA("Folder") then
+					newZone.ChildAdded:Connect(trackAIModel)
+				end
+			end)
+		else
+			warn("[ESPModule] Workspace 中找不到 'AiZones'，請確認資料夾名稱正確。")
+		end
 	end
 end
 
