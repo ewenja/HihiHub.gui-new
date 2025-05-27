@@ -135,8 +135,11 @@ local footV2, footOnScreen = getV2(parts.LowerTorso or parts.UpperTorso or hrp)
 if headOnScreen and footOnScreen then
 	local topY = math.min(headV2.Y, footV2.Y)
 	local botY = math.max(headV2.Y, footV2.Y)
-	local height = math.abs(topY - botY)
-	local width = height / 1.6
+
+	-- 調整倍率（預設倍率 = 1.25，可微調）
+	local scaleFactor = 1.25
+	local height = math.abs(topY - botY) * scaleFactor
+	local width = height / 1.5
 	local cx = screenPos.X
 	local cy = (topY + botY) / 2
 
@@ -173,8 +176,6 @@ else
 	lines.HealthBack.Visible = false
 	lines.HealthBar.Visible = false
 end
-
-
 
 		-- Skeleton
 		local function link(from, to, line)
