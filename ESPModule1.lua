@@ -134,14 +134,16 @@ local rootV2, rootVisible = getV2(hrp)
 
 if headVisible and rootVisible then
 	local distance = (camera.CFrame.Position - hrp.Position).Magnitude
-	local scale = 1 / (distance * 0.07) -- 距離縮放因子（可調整）
+	local scale = 1 / (distance * 0.07)
 
-	local height = 320 * scale -- 調整這個數值可以讓 box 剛好包住整個角色
+	local baseHeight = 280 -- 從 320 降低到 280，視覺上剛好踩地
+	local height = baseHeight * scale
 	local width = height / 1.6
-	local cx = rootV2.X
-	local cy = (headV2.Y + rootV2.Y) / 2
 
-	-- Box
+	local cx = rootV2.X
+	local cy = (headV2.Y + rootV2.Y) / 2 + 4 -- 中心微調往下 4px
+
+	-- Box 顯示
 	if ESPModule.AllVars.box then
 		lines.Box.Color = isAI and Color3.fromRGB(255, 255, 0) or ESPModule.BoxColor
 		lines.Box.Visible = true
@@ -153,7 +155,7 @@ if headVisible and rootVisible then
 		lines.Box.Visible = false
 	end
 
-	-- Health Bar
+	-- Healthbar 同步
 	if ESPModule.AllVars.health then
 		local ratio = hum.Health / hum.MaxHealth
 		local left = cx - width / 2 - 5
@@ -174,6 +176,7 @@ else
 	lines.HealthBack.Visible = false
 	lines.HealthBar.Visible = false
 end
+
 
 		-- Skeleton
 		local function link(from, to, line)
