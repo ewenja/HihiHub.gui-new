@@ -128,20 +128,21 @@ local function trackPlayer(plr, isAI)
 			RightFoot = char:FindFirstChild("RightFoot")
 		}
 
+-- 抓頭頂與腳底
 local head = parts.Head
-local foot = parts.RightFoot or parts.LeftFoot or parts.LowerTorso or hrp
+local foot = parts.RightFoot or parts.LeftFoot or parts.RightLowerLeg or parts.LeftLowerLeg or parts.LowerTorso or hrp
 
 if head and foot then
-	local headPos, headVisible = getV2(head)
-	local footPos, footVisible = getV2(foot)
+	local headV2, headOnScreen = getV2(head)
+	local footV2, footOnScreen = getV2(foot)
 
-	if headVisible and footVisible then
-		local topY = math.min(headPos.Y, footPos.Y)
-		local botY = math.max(headPos.Y, footPos.Y)
+	if headOnScreen and footOnScreen then
+		local topY = math.min(headV2.Y, footV2.Y)
+		local botY = math.max(headV2.Y, footV2.Y)
 
 		local height = botY - topY
 		local width = height / 1.6
-		local cx = (headPos.X + footPos.X) / 2
+		local cx = (headV2.X + footV2.X) / 2
 		local cy = (topY + botY) / 2
 
 		-- Box 顯示
@@ -156,7 +157,7 @@ if head and foot then
 			lines.Box.Visible = false
 		end
 
-		-- Healthbar
+		-- Health bar
 		if ESPModule.AllVars.health then
 			local ratio = hum.Health / hum.MaxHealth
 			local left = cx - width / 2 - 5
