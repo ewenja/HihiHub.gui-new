@@ -97,6 +97,7 @@ local function createESP(player, character)
 		end
 	end)
 
+	-- 儲存參考，方便後續移除
 	ESPObjects[player] = {
 		gui = esp,
 		connection = updateConn,
