@@ -16,64 +16,67 @@ local function createESP(player, character)
 	local humanoid = character:FindFirstChild("Humanoid")
 	if not head or not humanoid then return end
 
-	-- 移除舊的 ESP
 	if head:FindFirstChild("ESP") then
 		head.ESP:Destroy()
 	end
 
-	-- BillboardGui
 	local esp = Instance.new("BillboardGui")
 	esp.Name = "ESP"
 	esp.AlwaysOnTop = true
-	esp.Size = UDim2.new(0, 200, 0, 50)
+	esp.Size = UDim2.new(0, 180, 0, 50)
 	esp.StudsOffset = Vector3.new(0, 3, 0)
 	esp.Adornee = head
 	esp.Parent = head
 
-	-- 背景
 	local bg = Instance.new("Frame")
 	bg.Size = UDim2.new(1, 0, 1, 0)
-	bg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	bg.BackgroundTransparency = 0.3
+	bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+	bg.BackgroundTransparency = 0.4
 	bg.BorderSizePixel = 0
 	bg.Parent = esp
 
-	-- 頭像
+	local uicorner = Instance.new("UICorner", bg)
+	uicorner.CornerRadius = UDim.new(0, 6)
+
 	local avatar = Instance.new("ImageLabel")
-	avatar.Size = UDim2.new(0, 40, 0, 40)
-	avatar.Position = UDim2.new(0, 5, 0.5, -20)
+	avatar.Size = UDim2.new(0, 38, 0, 38)
+	avatar.Position = UDim2.new(0, 6, 0.5, -19)
 	avatar.BackgroundTransparency = 1
 	avatar.Image = "rbxassetid://0"
+	avatar.ClipsDescendants = true
 	avatar.Parent = bg
 
-	-- 非同步獲取玩家頭像
+	local corner = Instance.new("UICorner", avatar)
+	corner.CornerRadius = UDim.new(1, 0)
+
 	task.spawn(function()
 		local thumb = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 		if avatar then avatar.Image = thumb end
 	end)
 
-	-- 玩家名稱
 	local name = Instance.new("TextLabel")
 	name.Text = player.DisplayName or player.Name
-	name.Size = UDim2.new(0, 130, 0, 20)
-	name.Position = UDim2.new(0, 50, 0, 5)
-	name.TextColor3 = Color3.new(1, 1, 1)
-	name.TextStrokeTransparency = 0.5
+	name.Size = UDim2.new(0, 120, 0, 20)
+	name.Position = UDim2.new(0, 50, 0, 6)
+	name.TextColor3 = Color3.fromRGB(255, 255, 255)
+	name.TextStrokeTransparency = 0.6
+	name.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 	name.BackgroundTransparency = 1
 	name.TextXAlignment = Enum.TextXAlignment.Left
 	name.Font = Enum.Font.GothamBold
-	name.TextSize = 14
+	name.TextSize = 16
 	name.Parent = bg
 
-	-- 血量條背景
 	local hpBG = Instance.new("Frame")
-	hpBG.Position = UDim2.new(0, 50, 0, 30)
-	hpBG.Size = UDim2.new(0, 140, 0, 10)
-	hpBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+	hpBG.Position = UDim2.new(0, 50, 0, 28)
+	hpBG.Size = UDim2.new(0, 120, 0, 8)
+	hpBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	hpBG.BorderSizePixel = 0
 	hpBG.Parent = bg
 
-	-- 血量條
+	local hpCorner = Instance.new("UICorner", hpBG)
+	hpCorner.CornerRadius = UDim.new(0, 4)
+
 	local hpBar = Instance.new("Frame")
 	hpBar.Name = "HP"
 	hpBar.Size = UDim2.new(1, 0, 1, 0)
@@ -81,7 +84,9 @@ local function createESP(player, character)
 	hpBar.BorderSizePixel = 0
 	hpBar.Parent = hpBG
 
-	-- 持續更新血量
+	local hpBarCorner = Instance.new("UICorner", hpBar)
+	hpBarCorner.CornerRadius = UDim.new(0, 4)
+
 	local updateConn = RunService.RenderStepped:Connect(function()
 		if humanoid and humanoid.Health > 0 then
 			local ratio = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
@@ -97,7 +102,6 @@ local function createESP(player, character)
 		end
 	end)
 
-	-- 儲存參考，方便後續移除
 	ESPObjects[player] = {
 		gui = esp,
 		connection = updateConn,
