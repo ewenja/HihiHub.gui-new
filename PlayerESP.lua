@@ -1,6 +1,7 @@
 -- PlayerESP.lua
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local localPlayer = Players.LocalPlayer
 
 local PlayerESP = {}
@@ -24,9 +25,9 @@ local function createESP(player, character)
 	esp.Name = "ESP"
 	esp.AlwaysOnTop = true
 	esp.Size = UDim2.new(0, 180, 0, 50)
-	esp.StudsOffset = Vector3.new(0, 3, 0)
 	esp.Adornee = head
 	esp.Parent = head
+	esp.StudsOffset = Vector3.new(0, 3, 0)
 
 	local bg = Instance.new("Frame")
 	bg.Size = UDim2.new(1, 0, 1, 0)
@@ -87,8 +88,26 @@ local function createESP(player, character)
 	local hpBarCorner = Instance.new("UICorner", hpBar)
 	hpBarCorner.CornerRadius = UDim.new(0, 4)
 
-	local updateConn = RunService.RenderStepped:Connect(function()
-		if humanoid and humanoid.Health > 0 then
+	-- 滑動偏移初始化
+	local smoothOffset = Vector3.new(0, 3, 0)
+
+	local updateConn = RunService.RenderStepped:Connect(function(dt)
+		if humanoid and humanoid.Health > 0 and head and Workspace.CurrentCamera then
+			local camera = Workspace.CurrentCamera
+			local headPos = head.Position
+
+			-- 計算根據攝影機的偏移方向：右上方
+			local right = camera.CFrame.RightVector
+			local up = camera.CFrame.UpVector
+			local forward = camera.CFrame.LookVector
+
+			local goalOffset = right * 1.5 + up * 3 -- 右上偏移
+			smoothOffset = smoothOffset:Lerp(goalOffset, 0.1)
+
+			-- 套用偏移
+			esp.StudsOffset = smoothOffset
+
+			-- 血量條更新
 			local ratio = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
 			hpBar.Size = UDim2.new(ratio, 0, 1, 0)
 
@@ -108,7 +127,6 @@ local function createESP(player, character)
 	}
 end
 
--- 為玩家建立 ESP 並監聽角色變化
 local function hookPlayer(player)
 	if player == localPlayer then return end
 
@@ -125,7 +143,6 @@ local function hookPlayer(player)
 	table.insert(Connections, con)
 end
 
--- 移除所有 ESP
 local function clearAllESP()
 	for player, data in pairs(ESPObjects) do
 		if data.gui then data.gui:Destroy() end
@@ -134,13 +151,11 @@ local function clearAllESP()
 	ESPObjects = {}
 end
 
--- 初始化模組
 function PlayerESP:Init(externalToggles)
 	if self._connected then return end
 	self._connected = true
 	Toggles = externalToggles
 
-	-- 玩家加入事件
 	local con = Players.PlayerAdded:Connect(function(player)
 		if ESPEnabled then
 			hookPlayer(player)
@@ -148,7 +163,6 @@ function PlayerESP:Init(externalToggles)
 	end)
 	table.insert(Connections, con)
 
-	-- 監聽開關
 	RunService.RenderStepped:Connect(function()
 		if Toggles and Toggles.PlayerESPEnabled then
 			local state = Toggles.PlayerESPEnabled.Value
