@@ -3206,7 +3206,7 @@ local Library do
                 Settings:Keybind({
                     Name = "Menu Keybind",
                     Flag = "MenuBind",
-                    Default = Enum.KeyCode.None,
+                    Default = Enum.KeyCode.Unknown,
                     Callback = function(Value)
                         Window:SetOpen(Value)
                     end
