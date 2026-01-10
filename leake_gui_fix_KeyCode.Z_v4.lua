@@ -6731,11 +6731,13 @@ local Keys = {
                 end)
             end)
 
-            Library:Connect(UserInputService.InputBegan, function(Input)
+Library:Connect(UserInputService.InputBegan, function(Input)
                 if Keybind.Value == "None" then
                     return
                 end
-
+                if Keybind.Key == tostring(Enum.KeyCode.Unknown) then
+                    return
+                end
                 if tostring(Input.KeyCode) == Keybind.Key then
                     if Keybind.ModeSelected == "Toggle" then 
                         Keybind:Press()
