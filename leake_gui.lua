@@ -1,3 +1,8 @@
+-- Made by samet
+-- Join for high quality UI Commissions
+-- https://discord.gg/VhvTd5HV8d
+-- @joestar._3
+
 local Library do 
     local Workspace = game:GetService("Workspace")
     local UserInputService = game:GetService("UserInputService")
@@ -3201,7 +3206,7 @@ local Library do
                 Settings:Keybind({
                     Name = "Menu Keybind",
                     Flag = "MenuBind",
-                    Default = Enum.KeyCode.Z,
+                    Default = Enum.KeyCode.None,
                     Callback = function(Value)
                         Window:SetOpen(Value)
                     end
@@ -7436,3 +7441,6 @@ local Library do
         return Page
     end
 end
+
+getgenv().Library = Library
+return Library
