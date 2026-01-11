@@ -5291,7 +5291,7 @@ local Keys = {
             return Button
         end
 
-        Library.Sections.Slider = function(self, Data)
+Library.Sections.Slider = function(self, Data)
             Data = Data or { }
 
             local Slider = {
@@ -5353,7 +5353,7 @@ local Keys = {
                     BorderSizePixel = 0,
                     Position = UDim2New(0, 20, 1, -3),
                     Size = UDim2New(1, -40, 0, 7),
-                    ZIndex = 2,
+                    ZIndex = 10, 
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(27, 26, 29)
                 })  Items["RealSlider"]:AddToTheme({BackgroundColor3 = "Element"})
@@ -5371,7 +5371,7 @@ local Keys = {
                     ZIndex = 2,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
-                })  --Items["Accent"]:AddToTheme({BackgroundColor3 = "Accent"})
+                }) 
 
                 Instances:Create("UICorner", {
                     Parent = Items["Accent"].Instance,
@@ -5387,7 +5387,7 @@ local Keys = {
                     Image = "rbxassetid://117786983271442",
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, 5, 0.5, 0),
-                    ZIndex = 2,
+                    ZIndex = 3,
                     BorderSizePixel = 0,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
@@ -5415,7 +5415,7 @@ local Keys = {
                     BackgroundTransparency = 1,
                     Position = UDim2New(1, 0, 0.5, -3),
                     BorderSizePixel = 0,
-                    ZIndex = 2,
+                    ZIndex = 11, 
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Plus"]:AddToTheme({TextColor3 = "Text"})
@@ -5434,7 +5434,7 @@ local Keys = {
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, -2, 0.5, -2),
                     BorderSizePixel = 0,
-                    ZIndex = 2,
+                    ZIndex = 11, 
                     TextSize = 14,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })  Items["Minus"]:AddToTheme({TextColor3 = "Text"})
@@ -5467,9 +5467,6 @@ local Keys = {
                 end)
             end
 
-            --Slider.Section.Items["Fade"].Instance.Size = UDim2New(1, 0, 0, Slider.Section.Items["Content"].Instance.AbsoluteSize.X - 180)
-
-            --Items["Value"].Instance.TextTransparency = 1
             Items["RealSlider"].Instance.Position = UDim2New(0, 80, 1, -3)
             Items["Text"].Instance.Position = UDim2New(0, 80, 0, 0)
 
@@ -5485,11 +5482,9 @@ local Keys = {
                 if Bool then 
                     Items["RealSlider"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 20, 1, -3)})
                     Items["Text"]:Tween(TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2New(0, 0, 0, 0)})
-                   -- Items["Value"].Instance.TextTransparency = 0.3
                 else
                     Items["RealSlider"].Instance.Position = UDim2New(0, 80, 1, -3)
                     Items["Text"].Instance.Position = UDim2New(0, 80, 0, 0)
-                   -- Items["Value"].Instance.TextTransparency = 1
                 end
             end
 
@@ -5527,7 +5522,6 @@ local Keys = {
 
                     local SizeX = (Input.Position.X - Items["RealSlider"].Instance.AbsolutePosition.X) / Items["RealSlider"].Instance.AbsoluteSize.X
                     local Value = ((Slider.Max - Slider.Min) * SizeX) + Slider.Min
-
                     Slider:Set(Value)
 
                     if InputChanged then
