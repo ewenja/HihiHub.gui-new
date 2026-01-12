@@ -1822,6 +1822,7 @@ function f.expandAll(obj)
 	end
 end
 function createScriptViewer(scriptObj)
+    -- 1. 獲取原始碼
     local rawSource = ""
     local success, result = pcall(function()
         if decompile then return decompile(scriptObj)
@@ -1841,10 +1842,17 @@ function createScriptViewer(scriptObj)
 
     local function highlight(lua_code)
         lua_code = lua_code:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+        
         local colors = {
-            ["Keyword"] = "#F86D7C", ["Global"] = "#84D6F7", ["String"] = "#ADF195",
-            ["Comment"] = "#666666", ["Number"] = "#FFC600", ["Normal"] = "#CCCCCC"
+            ["Keyword"] = "#F86D7C",  -- 粉紅色 (local, function, end)
+            ["Global"]  = "#84D6F7",  -- 淺藍色 (game, workspace)
+            ["String"]  = "#ADF195",  -- 淺綠色 ("string")
+            ["Comment"] = "#666666",  -- 灰色 (-- comment)
+            ["Number"]  = "#FFC600",  -- 橘黃色 (123)
+            ["Normal"]  = "#CCCCCC",  -- 銀白色 (變數名)
+            ["Operator"] = "#CCCCCC"  -- 運算符
         }
+
         local keywords = {
             ["and"]=true, ["break"]=true, ["do"]=true, ["else"]=true, ["elseif"]=true, 
             ["end"]=true, ["false"]=true, ["for"]=true, ["function"]=true, ["if"]=true, 
@@ -1854,21 +1862,29 @@ function createScriptViewer(scriptObj)
         local globals = {
             ["game"]=true, ["workspace"]=true, ["script"]=true, ["math"]=true, ["string"]=true, 
             ["table"]=true, ["print"]=true, ["wait"]=true, ["require"]=true, ["Instance"]=true, 
-            ["Enum"]=true, ["Vector3"]=true, ["CFrame"]=true, ["Color3"]=true, ["UDim2"]=true, ["task"]=true
+            ["Enum"]=true, ["Vector3"]=true, ["CFrame"]=true, ["Color3"]=true, ["UDim2"]=true, 
+            ["task"]=true, ["getmetatable"]=true, ["setmetatable"]=true, ["pairs"]=true, ["ipairs"]=true
         }
-        local strings, comments = {}, {}
+
+        local strings = {}
+        local comments = {}
         
         lua_code = lua_code:gsub("(%-%-[^\n]*)", function(c) table.insert(comments, c) return "\2_"..#comments.."_\2" end)
         lua_code = lua_code:gsub("(\"[^\"]*\")", function(s) table.insert(strings, s) return "\1_"..#strings.."_\1" end)
         lua_code = lua_code:gsub("('[^']*')", function(s) table.insert(strings, s) return "\1_"..#strings.."_\1" end)
+        lua_code = lua_code:gsub("(\%[%[.-%]%])", function(s) table.insert(strings, s) return "\1_"..#strings.."_\1" end)
+
         lua_code = lua_code:gsub("([%w_]+)", function(w)
             if keywords[w] then return '<font color="'..colors.Keyword..'">'..w..'</font>'
             elseif globals[w] then return '<font color="'..colors.Global..'">'..w..'</font>'
             end return w
         end)
+        
         lua_code = lua_code:gsub("([^%w_])(%d+)([^%w_])", "%1<font color='"..colors.Number.."'>%2</font>%3")
+        
         lua_code = lua_code:gsub("\1_(%d+)_\1", function(id) return '<font color="'..colors.String..'">'..strings[tonumber(id)]..'</font>' end)
         lua_code = lua_code:gsub("\2_(%d+)_\2", function(id) return '<font color="'..colors.Comment..'">'..comments[tonumber(id)]..'</font>' end)
+        
         return lua_code
     end
 
@@ -1877,37 +1893,70 @@ function createScriptViewer(scriptObj)
     viewerGui.Parent = game:GetService("CoreGui")
     
     local frame = Instance.new("Frame", viewerGui)
-    frame.Size = UDim2.new(0, 700, 0, 450)
-    frame.Position = UDim2.new(0.5, -350, 0.5, -225)
-    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    frame.Size = UDim2.new(0, 800, 0, 500)
+    frame.Position = UDim2.new(0.5, -400, 0.5, -250)
+    frame.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
 
+    -- 頂部標題欄
     local topBar = Instance.new("Frame", frame)
-    topBar.Size = UDim2.new(1, 0, 0, 35)
-    topBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    topBar.Size = UDim2.new(1, 0, 0, 28)
+    topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    topBar.BorderSizePixel = 0
     
-    local title = Instance.new("TextLabel", topBar)
-    title.Size = UDim2.new(1, -250, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "Script: " .. scriptObj.Name
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Font = Enum.Font.SourceSansBold
-    title.TextSize = 16
+    local titleIcon = Instance.new("ImageLabel", topBar)
+    titleIcon.Size = UDim2.new(0, 16, 0, 16)
+    titleIcon.Position = UDim2.new(0, 6, 0, 6)
+    titleIcon.BackgroundTransparency = 1
+    if scriptObj:IsA("LocalScript") then
+        titleIcon.Image = "rbxassetid://15228640813"
+    elseif scriptObj:IsA("ModuleScript") then
+        titleIcon.Image = "rbxassetid://15228641151"
+    else
+        titleIcon.Image = "rbxassetid://15228640474"
+    end
 
-    local scroll = Instance.new("ScrollingFrame", frame)
-    scroll.Size = UDim2.new(1, 0, 1, -35)
-    scroll.Position = UDim2.new(0, 0, 0, 35)
-    scroll.CanvasSize = UDim2.new(0, 0, 10, 0)
-    scroll.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    scroll.ScrollBarThickness = 6
+    local title = Instance.new("TextLabel", topBar)
+    title.Size = UDim2.new(1, -100, 1, 0)
+    title.Position = UDim2.new(0, 28, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = scriptObj.Name
+    title.TextColor3 = Color3.fromRGB(204, 204, 204)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Font = Enum.Font.SourceSans
+    title.TextSize = 14
+
+    local contentArea = Instance.new("Frame", frame)
+    contentArea.Size = UDim2.new(1, 0, 1, -28)
+    contentArea.Position = UDim2.new(0, 0, 0, 28)
+    contentArea.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+    contentArea.BorderSizePixel = 0
+
+    local scroll = Instance.new("ScrollingFrame", contentArea)
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.ScrollBarThickness = 12
+    scroll.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 80)
+    
+    local lineNumbers = Instance.new("TextLabel", scroll)
+    lineNumbers.Size = UDim2.new(0, 30, 1, 0)
+    lineNumbers.Position = UDim2.new(0, 0, 0, 0)
+    lineNumbers.BackgroundTransparency = 1
+    lineNumbers.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    lineNumbers.TextColor3 = Color3.fromRGB(100, 100, 100)
+    lineNumbers.TextXAlignment = Enum.TextXAlignment.Right
+    lineNumbers.TextYAlignment = Enum.TextYAlignment.Top
+    lineNumbers.Font = Enum.Font.Code
+    lineNumbers.TextSize = 14
+    lineNumbers.Text = "1"
     
     local viewLabel = Instance.new("TextLabel", scroll)
-    viewLabel.Size = UDim2.new(1, -10, 1, 0)
-    viewLabel.Position = UDim2.new(0, 5, 0, 0)
+    viewLabel.Size = UDim2.new(1, -40, 1, 0)
+    viewLabel.Position = UDim2.new(0, 40, 0, 0)
     viewLabel.BackgroundTransparency = 1
     viewLabel.RichText = true
     viewLabel.Text = highlight(rawSource)
@@ -1916,10 +1965,11 @@ function createScriptViewer(scriptObj)
     viewLabel.TextYAlignment = Enum.TextYAlignment.Top
     viewLabel.Font = Enum.Font.Code
     viewLabel.TextSize = 14
-    viewLabel.Visible = true 
+    viewLabel.TextWrapped = false
+
     local editBox = Instance.new("TextBox", scroll)
-    editBox.Size = UDim2.new(1, -10, 1, 0)
-    editBox.Position = UDim2.new(0, 5, 0, 0)
+    editBox.Size = UDim2.new(1, -40, 1, 0)
+    editBox.Position = UDim2.new(0, 40, 0, 0)
     editBox.BackgroundTransparency = 1
     editBox.Text = rawSource
     editBox.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -1929,41 +1979,99 @@ function createScriptViewer(scriptObj)
     editBox.TextSize = 14
     editBox.MultiLine = true
     editBox.ClearTextOnFocus = false
-    editBox.Visible = false
+    editBox.Visible = false 
 
-    local function updateCanvas(obj)
-        scroll.CanvasSize = UDim2.new(0, obj.TextBounds.X + 20, 0, obj.TextBounds.Y + 50)
-        obj.Size = UDim2.new(1, 0, 0, obj.TextBounds.Y + 50)
+    local function updateLayout(text)
+        local _, lineCount = text:gsub("\n", "\n")
+        lineCount = lineCount + 1
+        
+        local lines = ""
+        for i = 1, lineCount do
+            lines = lines .. i .. "\n"
+        end
+        lineNumbers.Text = lines
+        
+        local textHeight = 0
+        if editBox.Visible then
+            textHeight = editBox.TextBounds.Y
+        else
+            textHeight = viewLabel.TextBounds.Y
+        end
+        
+        local finalHeight = math.max(textHeight + 50, frame.AbsoluteSize.Y)
+        scroll.CanvasSize = UDim2.new(0, viewLabel.TextBounds.X + 100, 0, finalHeight)
+        
+        viewLabel.Size = UDim2.new(1, -40, 0, finalHeight)
+        editBox.Size = UDim2.new(1, -40, 0, finalHeight)
+        lineNumbers.Size = UDim2.new(0, 30, 0, finalHeight)
     end
-    viewLabel:GetPropertyChangedSignal("TextBounds"):Connect(function() if viewLabel.Visible then updateCanvas(viewLabel) end end)
-    editBox:GetPropertyChangedSignal("TextBounds"):Connect(function() if editBox.Visible then updateCanvas(editBox) end end)
+    
+    viewLabel:GetPropertyChangedSignal("TextBounds"):Connect(function() if viewLabel.Visible then updateLayout(editBox.Text) end end)
+    editBox:GetPropertyChangedSignal("Text"):Connect(function() if editBox.Visible then updateLayout(editBox.Text) end end)
+    
+    updateLayout(rawSource)
+
     local closeBtn = Instance.new("TextButton", topBar)
-    closeBtn.Size = UDim2.new(0, 40, 1, 0)
-    closeBtn.Position = UDim2.new(1, -40, 0, 0)
-    closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    closeBtn.BackgroundTransparency = 0.2
+    closeBtn.Size = UDim2.new(0, 28, 0, 28)
+    closeBtn.Position = UDim2.new(1, -28, 0, 0)
+    closeBtn.BackgroundTransparency = 1
     closeBtn.Text = "X"
-    closeBtn.TextColor3 = Color3.new(1, 1, 1)
-    closeBtn.Font = Enum.Font.SourceSansBold
-    closeBtn.TextSize = 18
+    closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    closeBtn.Font = Enum.Font.SourceSans
+    closeBtn.TextSize = 16
     closeBtn.MouseButton1Click:Connect(function() viewerGui:Destroy() end)
-    local copyBtn = Instance.new("TextButton", topBar)
-    copyBtn.Size = UDim2.new(0, 60, 1, -10)
-    copyBtn.Position = UDim2.new(1, -110, 0, 5)
-    copyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    copyBtn.Text = "Copy"
-    copyBtn.TextColor3 = Color3.new(1,1,1)
-    copyBtn.Font = Enum.Font.SourceSans
-    copyBtn.TextSize = 14
-    copyBtn.MouseButton1Click:Connect(function()
-        if setclipboard then
-            setclipboard(editBox.Text)
-            copyBtn.Text = "Copied!"
-            wait(1)
-            copyBtn.Text = "Copy"
+    
+    local btnContainer = Instance.new("Frame", topBar)
+    btnContainer.Size = UDim2.new(0, 200, 1, 0)
+    btnContainer.Position = UDim2.new(1, -230, 0, 0)
+    btnContainer.BackgroundTransparency = 1
+
+    local function createToolBtn(text, pos, color, callback)
+        local btn = Instance.new("TextButton", btnContainer)
+        btn.Size = UDim2.new(0, 60, 0, 20)
+        btn.Position = UDim2.new(0, pos, 0.5, -10)
+        btn.BackgroundColor3 = color
+        btn.BorderSizePixel = 0
+        btn.Text = text
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 14
+        btn.MouseButton1Click:Connect(callback)
+        local uiCorner = Instance.new("UICorner", btn)
+        uiCorner.CornerRadius = UDim.new(0, 4)
+        return btn
+    end
+
+    local isEditing = false
+    createToolBtn("Edit", 0, Color3.fromRGB(0, 122, 204), function()
+        isEditing = not isEditing
+        if isEditing then
+            viewLabel.Visible = false
+            editBox.Visible = true
+            editBox.Text = editBox.Text 
+        else
+            editBox.Visible = false
+            viewLabel.Visible = true
+            viewLabel.Text = highlight(editBox.Text)
         end
     end)
 
+    createToolBtn("Run", 65, Color3.fromRGB(50, 160, 50), function()
+        local code = editBox.Text
+        local loadFunc, err = loadstring(code)
+        if loadFunc then
+            task.spawn(loadFunc)
+        else
+            warn("Execution Error: "..tostring(err))
+        end
+    end)
+
+    local copyBtn = createToolBtn("Copy", 130, Color3.fromRGB(80, 80, 80), function()
+        if setclipboard then
+            setclipboard(editBox.Text)
+        end
+    end)
+end
     local execBtn = Instance.new("TextButton", topBar)
     execBtn.Size = UDim2.new(0, 70, 1, -10)
     execBtn.Position = UDim2.new(1, -190, 0, 5)
@@ -3118,30 +3226,25 @@ local propControls = {
 	end,
 ["Color3"] = function(prop, child)
 		local newMt = setmetatable({},{})
-		local mainFrame, preview, rBox, gBox, bBox
+		local mainFrame, preview, textBox
 		local isFocusing = false
 
-		local function applyColor()
-			if not rBox or not gBox or not bBox then return end
+		local function applyColorFromText()
+			if not textBox then return end
 			
-			local r = tonumber(rBox.Text) or 0
-			local g = tonumber(gBox.Text) or 0
-			local b = tonumber(bBox.Text) or 0
+			local r, g, b = textBox.Text:match("(%d+)%s*[,%s]%s*(%d+)%s*[,%s]%s*(%d+)")
 			
-			r = math.clamp(r, 0, 255)
-			g = math.clamp(g, 0, 255)
-			b = math.clamp(b, 0, 255)
-			
-			local newColor = Color3.fromRGB(r, g, b)
-			
-			if preview then preview.BackgroundColor3 = newColor end
-			
-			for i,v in pairs(explorerTree.Selection.List) do
-				pcall(function()
-					if v:IsA(prop.Class) then
-						v[prop.Name] = newColor
-					end
-				end)
+			if r and g and b then
+				local newColor = Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b))
+				if preview then preview.BackgroundColor3 = newColor end
+				
+				for i,v in pairs(explorerTree.Selection.List) do
+					pcall(function()
+						if v:IsA(prop.Class) then
+							v[prop.Name] = newColor
+						end
+					end)
+				end
 			end
 		end
 
@@ -3149,77 +3252,56 @@ local propControls = {
 			mainFrame = frame
 			mainFrame.BackgroundTransparency = 1
 			
-			preview = CreateInstance("Frame", {
+			textBox = CreateInstance("TextBox", {
 				Parent = frame,
-				Position = UDim2.new(0, 0, 0, 2),
-				Size = UDim2.new(0, 30, 0, 18),
-				BackgroundColor3 = Color3.new(1,1,1),
-				BorderSizePixel = 1,
-				BorderColor3 = Color3.new(0,0,0)
-			})
-			
-			local textProps = {
-				TextColor3 = Color3.new(0.8, 0.8, 0.8),
+				Position = UDim2.new(0, 0, 0, 0),
+				Size = UDim2.new(1, -25, 1, 0),
 				BackgroundTransparency = 1,
+				Text = "255, 255, 255",
+				TextColor3 = Color3.fromRGB(204, 204, 204),
+				TextXAlignment = Enum.TextXAlignment.Left,
 				Font = Enum.Font.SourceSans,
 				TextSize = 14,
-				TextXAlignment = Enum.TextXAlignment.Right
-			}
-			
-			local boxProps = {
-				TextColor3 = Color3.new(1, 1, 1),
-				BackgroundColor3 = Color3.new(0.15, 0.15, 0.15),
-				BorderColor3 = Color3.new(0.3, 0.3, 0.3),
-				Font = Enum.Font.SourceSans,
-				TextSize = 14,
-				ClearTextOnFocus = true
-			}
-
-			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 35, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "R:", TextColor3 = Color3.fromRGB(255, 100, 100), BackgroundTransparency = 1, Font = 3, TextSize = 14})
-			rBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 48, 0, 2), Size = UDim2.new(0, 30, 0, 18),
-				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
-			})
-			
-			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 83, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "G:", TextColor3 = Color3.fromRGB(100, 255, 100), BackgroundTransparency = 1, Font = 3, TextSize = 14})
-			gBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 96, 0, 2), Size = UDim2.new(0, 30, 0, 18),
-				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
-			})
-			
-			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 131, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "B:", TextColor3 = Color3.fromRGB(100, 100, 255), BackgroundTransparency = 1, Font = 3, TextSize = 14})
-			bBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 144, 0, 2), Size = UDim2.new(0, 30, 0, 18),
-				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
+				ClearTextOnFocus = false
 			})
 
-			-- 事件綁定：當輸入完成或失去焦點時，更新顏色
-			local function onFocusLost()
+			local previewBorder = CreateInstance("Frame", {
+				Parent = frame,
+				Position = UDim2.new(1, -22, 0.5, -7),
+				Size = UDim2.new(0, 14, 0, 14),
+				BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+				BorderSizePixel = 0
+			})
+			
+			preview = CreateInstance("Frame", {
+				Parent = previewBorder,
+				Position = UDim2.new(0, 1, 0, 1),
+				Size = UDim2.new(1, -2, 1, -2),
+				BackgroundColor3 = Color3.new(1,1,1),
+				BorderSizePixel = 0
+			})
+
+			textBox.FocusLost:Connect(function()
 				isFocusing = false
-				applyColor()
-			end
+				applyColorFromText()
+			end)
 			
-			local function onFocused()
+			textBox.Focused:Connect(function()
 				isFocusing = true
-			end
-
-			rBox.FocusLost:Connect(onFocusLost) rBox.Focused:Connect(onFocused)
-			gBox.FocusLost:Connect(onFocusLost) gBox.Focused:Connect(onFocused)
-			bBox.FocusLost:Connect(onFocusLost) bBox.Focused:Connect(onFocused)
+			end)
 		end
 		newMt.Setup = setup
 
 		local function update(self, value)
 			if not preview or isFocusing then return end
 			
+			preview.BackgroundColor3 = value
+			
 			local r = math.floor(value.R * 255 + 0.5)
 			local g = math.floor(value.G * 255 + 0.5)
 			local b = math.floor(value.B * 255 + 0.5)
 			
-			preview.BackgroundColor3 = value
-			rBox.Text = tostring(r)
-			gBox.Text = tostring(g)
-			bBox.Text = tostring(b)
+			textBox.Text = string.format("%d, %d, %d", r, g, b)
 		end	
 		newMt.Update = update
 	
