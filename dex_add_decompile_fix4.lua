@@ -2122,7 +2122,6 @@ end
             updateCanvas(viewLabel)
         end
     end)
-end
 
 function f.rightClick()
 	rightClickContext:Clear()
@@ -3536,11 +3535,25 @@ end
 
 function f.newProperties()
 	local newgui = getResource("PropertiesPanel")
+	
+	newgui.Content.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+	newgui.Content.BorderColor3 = Color3.fromRGB(34, 34, 34)
+	newgui.Content.List.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+	
+	newgui.TopBar.BackgroundColor3 = Color3.fromRGB(53, 53, 53) 
+	newgui.TopBar.BorderColor3 = Color3.fromRGB(20, 20, 20)
+	
+	local searchFrame = newgui.TopBar.SearchFrame
+	searchFrame.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+	searchFrame.BorderColor3 = Color3.fromRGB(20, 20, 20)
+	searchFrame.Search.TextColor3 = Color3.fromRGB(255, 255, 255)
+	searchFrame.Search.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
+
 	local propertiesScroll = ScrollBar.new()
 	local propertiesScrollH = ScrollBar.new(true)
 	local newTree = TreeView.new()
 	newTree.NodeTemplate = getResource("PEntry")
-	newTree.Height = 22
+	newTree.Height = 20
 	newTree.OffY = 0
 	newTree.Scroll = propertiesScroll
 	newTree.DisplayFrame = newgui.Content.List
@@ -3556,27 +3569,44 @@ function f.newProperties()
 	end
 	
 	newTree.NodeCreate = function(self,entry,i)	
+		entry.BorderSizePixel = 0
+		entry.Indent.BorderSizePixel = 0
+		entry.Indent.Sep.BorderSizePixel = 0
+
 		entry.MouseEnter:Connect(function()
 			local node = self.Tree[i + self.Index]
 			if node then
 				if self.Selection.Selected[node.RefName] then return end
-				entry.Indent.BackgroundTransparency = 0.7
+				entry.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+				entry.Indent.BackgroundTransparency = 1
+				entry.BackgroundTransparency = 0
 			end
 		end)
+		
 		entry.MouseLeave:Connect(function()
 			local node = self.Tree[i + self.Index]
 			if node then
 				if self.Selection.Selected[node.RefName] then return end
+				
+				local isEven = ((i + self.Index) % 2 == 0)
+				if node.Category then
+					entry.BackgroundColor3 = Color3.fromRGB(37, 37, 37) -- 分類標題深色
+				elseif isEven then
+					entry.BackgroundColor3 = Color3.fromRGB(46, 46, 46) -- 偶數行
+				else
+					entry.BackgroundColor3 = Color3.fromRGB(53, 53, 53) -- 奇數行 (稍亮)
+				end
+				
+				entry.BackgroundTransparency = 0
 				entry.Indent.BackgroundTransparency = 1
 			end
 		end)						
+		
 		entry.MouseButton1Down:Connect(function()
 			local node = self.Tree[i + self.Index]
-			--node.Control:Focus()
 		end)
 		entry.MouseButton2Down:Connect(function()
 			local node = self.Tree[i + self.Index]
-			--node.Control:Focus()
 		end)
 						
 		entry.Indent.Expand.MouseEnter:Connect(function()
@@ -3609,38 +3639,42 @@ function f.newProperties()
 		entry.Indent.EntryName.Text = node.Prop.Name
 		entry.Indent.Control:ClearAllChildren()
 		
+		entry.Indent.Sep.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+		entry.Indent.Sep.BorderSizePixel = 0
+
 		if not node.Category then
-			-- Update property controls
 			node.Control:Setup(entry.Indent.Control)
 			if node.Depth > 1 then
-				--node.Control:Update(node.Obj[node.Prop.ParentName][node.Prop.Name])
 			else
 				node.Control:Update(node.Obj[node.Prop.Name])
 			end
 		
-			-- Color switching
-			--if drawOrder % 2 == 0 and not node.Category then
-			--	entry.BackgroundColor3 = Color3.new(96/255,96/255,96/255)
-			--else
-				entry.BackgroundColor3 = Color3.new(80/255,80/255,80/255)
-			--end
+			if drawOrder % 2 == 0 then
+				entry.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
+			else
+				entry.BackgroundColor3 = Color3.fromRGB(53, 53, 53)
+			end
+			entry.BackgroundTransparency = 0
 		else
-			entry.BackgroundColor3 = Color3.new(64/255,64/255,64/255)
+			entry.BackgroundColor3 = Color3.fromRGB(37, 37, 37)
+			entry.BackgroundTransparency = 0
 		end
 		drawOrder = drawOrder + 1
 		
-		-- Fonts for category nodes and property nodes
 		if node.Category then
 			entry.Indent.Sep.Visible = false
 			entry.Indent.EntryName.Font = Enum.Font.SourceSansBold
-			entry.Indent.EntryName.TextColor3 = Color3.new(220/255,220/255,220/255)
+			entry.Indent.EntryName.TextColor3 = Color3.fromRGB(220, 220, 220) 
+			entry.Indent.Control.Visible = false
 		else
 			entry.Indent.Sep.Visible = true
+			entry.Indent.Control.Visible = true
 			entry.Indent.EntryName.Font = Enum.Font.SourceSans
+			
 			if node.Prop.Tags["readonly"] then
-				entry.Indent.EntryName.TextColor3 = Color3.new(144/255,144/255,144/255)
+				entry.Indent.EntryName.TextColor3 = Color3.fromRGB(120, 120, 120) 
 			else
-				entry.Indent.EntryName.TextColor3 = Color3.new(220/255,220/255,220/255)
+				entry.Indent.EntryName.TextColor3 = Color3.fromRGB(204, 204, 204)
 			end
 		end
 		
@@ -3655,99 +3689,80 @@ function f.newProperties()
 			entry.Indent.Expand.Visible = false
 		end
 					
-		if self.Selection.Selected[node.Obj] then
-			entry.Indent.EntryName.TextColor3 = Color3.new(1,1,1)
-			entry.Indent.BackgroundTransparency = 0
-		else
-			--entry.Indent.EntryName.TextColor3 = Color3.new(220/255, 220/255, 220/255)
-			entry.Indent.BackgroundTransparency = 1
-		end
+		entry.Indent.BackgroundTransparency = 1
 		
 		if not node.Category and node.Depth == 1 then
 			changeEvents[node.Obj] = node.Obj:GetPropertyChangedSignal(node.Prop.Name):Connect(function()
-				node.Control:Update(node.Obj[node.Prop.Name])
+				pcall(function()
+					node.Control:Update(node.Obj[node.Prop.Name])
+				end)
 			end)
 		end
 					
-		entry.Indent.Position = UDim2.new(0,18*node.Depth,0,0)
+		entry.Indent.Position = UDim2.new(0, 16 * node.Depth, 0, 0)
 		
-		local newPropWidth = propWidth - node.Depth*18
-		entry.Indent.EntryName.Size = UDim2.new(0,newPropWidth,0,22)
-		entry.Indent.Control.Position = UDim2.new(0,newPropWidth+2,0,0)
-		entry.Indent.Control.Size = UDim2.new(1,-newPropWidth-2,0,22)
-		entry.Indent.Sep.Position = UDim2.new(0,newPropWidth+1,0,0)
-		entry.Size = UDim2.new(0,281,0,22)
+		local newPropWidth = propWidth - node.Depth * 16
+		entry.Indent.EntryName.Size = UDim2.new(0, newPropWidth, 0, 20)
+		entry.Indent.Control.Position = UDim2.new(0, newPropWidth + 2, 0, 0)
+		entry.Indent.Control.Size = UDim2.new(1, -newPropWidth - 2, 0, 20)
+		entry.Indent.Sep.Position = UDim2.new(0, newPropWidth + 1, 0, 0)
+		entry.Indent.Sep.Size = UDim2.new(0, 1, 1, 0)
+		entry.Size = UDim2.new(0, 281, 0, 20)
 	end
 	
 	propertiesScroll.Gui.Parent = newgui.Content
 	propertiesScroll:Texture({
-		FrameColor = Color3.new(80/255,80/255,80/255),
-		ThumbColor = Color3.new(120/255,120/255,120/255),
-		ThumbSelectColor = Color3.new(140/255,140/255,140/255),
-		ButtonColor = Color3.new(163/255,162/255,165/255),
-		ArrowColor = Color3.new(220/255,220/255,220/255)
+		FrameColor = Color3.fromRGB(46, 46, 46),
+		ThumbColor = Color3.fromRGB(80, 80, 80),
+		ThumbSelectColor = Color3.fromRGB(120, 120, 120),
+		ButtonColor = Color3.fromRGB(46, 46, 46),
+		ArrowColor = Color3.fromRGB(160, 160, 160)
 	})
-	propertiesScroll:SetScrollFrame(newgui.Content,3)
+	propertiesScroll:SetScrollFrame(newgui.Content, 3)
 	
 	propertiesScrollH.Gui.Visible = false
 	propertiesScrollH.Gui.Parent = newgui.Content
 	propertiesScrollH:Texture({
-		FrameColor = Color3.new(80/255,80/255,80/255),
-		ThumbColor = Color3.new(120/255,120/255,120/255),
-		ThumbSelectColor = Color3.new(140/255,140/255,140/255),
-		ButtonColor = Color3.new(163/255,162/255,165/255),
-		ArrowColor = Color3.new(220/255,220/255,220/255)
+		FrameColor = Color3.fromRGB(46, 46, 46),
+		ThumbColor = Color3.fromRGB(80, 80, 80),
+		ThumbSelectColor = Color3.fromRGB(120, 120, 120),
+		ButtonColor = Color3.fromRGB(46, 46, 46),
+		ArrowColor = Color3.fromRGB(160, 160, 160)
 	})
-	propertiesScrollH.Gui.Position = UDim2.new(0,0,1,-16)
-	propertiesScrollH.Gui.Size = UDim2.new(1,-16,0,16)
+	propertiesScrollH.Gui.Position = UDim2.new(0, 0, 1, -16)
+	propertiesScrollH.Gui.Size = UDim2.new(1, -16, 0, 16)
 	
 	newTree.OnUpdate = function(self)
-		local guiX = propertiesPanel.Content.AbsoluteSize.X-16
-		--[[
-		propertiesScrollH.VisibleSpace = guiX
-		propertiesScrollH.TotalSpace = nodeWidth+10
-		if nodeWidth > guiX then
-			explorerScrollH.Gui.Visible = true
-			explorerScroll.Gui.Size = UDim2.new(0,16,1,-16)
-			self.DisplayFrame.Size = UDim2.new(1,-16,1,-16)
-		else
-			explorerScrollH.Gui.Visible = false
-			explorerScroll.Gui.Size = UDim2.new(0,16,1,0)
-			self.DisplayFrame.Size = UDim2.new(1,-16,1,0)
-		end
-		--]]
+		local guiX = propertiesPanel.Content.AbsoluteSize.X - 16
 		propertiesScroll.TotalSpace = #self.Tree + 1
-		propertiesScroll.VisibleSpace = math.ceil(self.DisplayFrame.AbsoluteSize.Y / 23)
+		propertiesScroll.VisibleSpace = math.ceil(self.DisplayFrame.AbsoluteSize.Y / 20)
 		propertiesScrollH:Update()		
 		propertiesScroll:Update()
 	end
-	propertiesScroll.OnUpdate = function(self) if newTree.Index == self.Index then return end newTree.Index = self.Index newTree:Refresh() end
+	propertiesScroll.OnUpdate = function(self) 
+		if newTree.Index == self.Index then return end 
+		newTree.Index = self.Index 
+		newTree:Refresh() 
+	end
 	propertiesScrollH.OnUpdate = function(self)
 		for i,v in pairs(propertiesTree.Entries) do
-			v.Position = UDim2.new(0,-self.Index,0,v.Position.Y.Offset)
+			v.Position = UDim2.new(0, -self.Index, 0, v.Position.Y.Offset)
 		end
 	end
-	--explorerData = {Window = newgui, NodeData = {}, Scroll = explorerScroll, Entries = {}}
 	
 	propertiesTree = newTree
 	
 	table.insert(activeWindows,newgui)
 	f.hookWindowListener(newgui)
-	newgui.Changed:connect(function(prop) if prop == "AbsoluteSize" or prop == "AbsolutePosition" then newTree:Refresh() end end)
+	newgui.Changed:Connect(function(prop) 
+		if prop == "AbsoluteSize" or prop == "AbsolutePosition" then 
+			newTree:Refresh() 
+		end 
+	end)
 	
 	local searchBox = newgui.TopBar.SearchFrame.Search
 	local searchAnim = searchBox.Parent.Entering
 	searchBox:GetPropertyChangedSignal("Text"):Connect(function()
-		--[[
-		local searchTime = tick()
-		lastSearch = searchTime
-		wait()
-		if lastSearch ~= searchTime then return end
-		newTree.SearchText = searchBox.Text
-		f.updateSearch(newTree)
-		explorerTree:TreeUpdate()
-		explorerTree:Refresh()
-		--]]
 	end)
 	
 	searchBox.Focused:Connect(function()
