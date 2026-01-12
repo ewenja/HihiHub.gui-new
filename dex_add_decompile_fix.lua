@@ -1840,8 +1840,72 @@ function createScriptViewer(scriptObj)
     else
         source = "-- 無法反編譯 (Could not decompile)\n-- 你的注入器可能不支援 decompile 函數"
     end
+    
+    local rawSource = "-- Decompiled by HihiHub\n\n" .. source
+    local function highlight(lua_code)
+        lua_code = lua_code:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
 
-    source = "-- Decompiled by HihiHub\n\n" .. source
+        local colors = {
+            ["Keyword"] = "#F86D7C",
+            ["Global"]  = "#84D6F7",
+            ["String"]  = "#ADF195",
+            ["Comment"] = "#666666",
+            ["Number"]  = "#FFC600",
+            ["Normal"]  = "#CCCCCC"
+        }
+
+        local keywords = {
+            ["and"]=true, ["break"]=true, ["do"]=true, ["else"]=true, ["elseif"]=true, 
+            ["end"]=true, ["false"]=true, ["for"]=true, ["function"]=true, ["if"]=true, 
+            ["in"]=true, ["local"]=true, ["nil"]=true, ["not"]=true, ["or"]=true, 
+            ["repeat"]=true, ["return"]=true, ["then"]=true, ["true"]=true, ["until"]=true, ["while"]=true
+        }
+        
+        local globals = {
+            ["game"]=true, ["workspace"]=true, ["script"]=true, ["math"]=true, 
+            ["string"]=true, ["table"]=true, ["print"]=true, ["wait"]=true, 
+            ["require"]=true, ["Instance"]=true, ["Enum"]=true, ["Vector3"]=true, 
+            ["CFrame"]=true, ["Color3"]=true, ["UDim2"]=true, ["task"]=true
+        }
+
+        local strings = {}
+        local comments = {}
+        
+        lua_code = lua_code:gsub("(%-%-[^\n]*)", function(c)
+            table.insert(comments, c)
+            return "\2" .. #comments .. "\2"
+        end)
+
+        lua_code = lua_code:gsub("(\"[^\"]*\")", function(s)
+            table.insert(strings, s)
+            return "\1" .. #strings .. "\1"
+        end)
+        lua_code = lua_code:gsub("('[^']*')", function(s)
+            table.insert(strings, s)
+            return "\1" .. #strings .. "\1"
+        end)
+
+        lua_code = lua_code:gsub("([%w_]+)", function(word)
+            if keywords[word] then
+                return '<font color="'..colors.Keyword..'">'..word..'</font>'
+            elseif globals[word] then
+                return '<font color="'..colors.Global..'">'..word..'</font>'
+            end
+            return word
+        end)
+        
+        lua_code = lua_code:gsub("([^%w_])(%d+)([^%w_])", "%1<font color='"..colors.Number.."'>%2</font>%3")
+
+        lua_code = lua_code:gsub("\1(%d+)\1", function(id)
+            return '<font color="'..colors.String..'">'..strings[tonumber(id)]..'</font>'
+        end)
+
+        lua_code = lua_code:gsub("\2(%d+)\2", function(id)
+            return '<font color="'..colors.Comment..'">'..comments[tonumber(id)]..'</font>'
+        end)
+
+        return lua_code
+    end
 
     local viewerGui = Instance.new("ScreenGui")
     viewerGui.Name = "DexScriptViewer"
@@ -1888,21 +1952,20 @@ function createScriptViewer(scriptObj)
     scroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     scroll.ScrollBarThickness = 8
     
-    local codeBox = Instance.new("TextBox", scroll)
+    local codeBox = Instance.new("TextLabel", scroll)
     codeBox.Size = UDim2.new(1, 0, 1, 0)
     codeBox.BackgroundTransparency = 1
-    codeBox.Text = source
-    codeBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+    codeBox.RichText = true 
+    codeBox.Text = highlight(rawSource) 
+    codeBox.TextColor3 = Color3.fromRGB(204, 204, 204) 
     codeBox.TextXAlignment = Enum.TextXAlignment.Left
     codeBox.TextYAlignment = Enum.TextYAlignment.Top
-    codeBox.Font = Enum.Font.Code
+    codeBox.Font = Enum.Font.Code 
     codeBox.TextSize = 14
-    codeBox.MultiLine = true
-    codeBox.ClearTextOnFocus = false
-    codeBox.TextEditable = false
+    codeBox.TextWrapped = false 
 
     codeBox:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        scroll.CanvasSize = UDim2.new(0, codeBox.TextBounds.X, 0, codeBox.TextBounds.Y + 50)
+        scroll.CanvasSize = UDim2.new(0, codeBox.TextBounds.X + 20, 0, codeBox.TextBounds.Y + 50)
         codeBox.Size = UDim2.new(1, 0, 0, codeBox.TextBounds.Y + 50)
     end)
     
@@ -1914,14 +1977,13 @@ function createScriptViewer(scriptObj)
     copyBtn.TextColor3 = Color3.new(1,1,1)
     copyBtn.MouseButton1Click:Connect(function()
         if setclipboard then
-            setclipboard(source)
+            setclipboard(rawSource)
             copyBtn.Text = "Copied!"
             wait(1)
             copyBtn.Text = "Copy to Clipboard"
         end
     end)
 end
-
 function f.rightClick()
 	rightClickContext:Clear()
 	
