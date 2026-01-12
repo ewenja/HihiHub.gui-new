@@ -1822,89 +1822,53 @@ function f.expandAll(obj)
 	end
 end
 function createScriptViewer(scriptObj)
-    local source = ""
-    
+    local rawSource = ""
     local success, result = pcall(function()
-        if decompile then
-            return decompile(scriptObj)
-        elseif getscriptsource then
-            return getscriptsource(scriptObj)
-        elseif get_script_source then
-            return get_script_source(scriptObj)
+        if decompile then return decompile(scriptObj)
+        elseif getscriptsource then return getscriptsource(scriptObj)
+        elseif get_script_source then return get_script_source(scriptObj)
         end
         return scriptObj.Source
     end)
 
     if success and result and result ~= "" then
-        source = result
+        rawSource = result
     else
-        source = "-- 無法反編譯 (Could not decompile)\n-- 你的注入器可能不支援 decompile 函數"
+        rawSource = "-- 無法反編譯或腳本為空\n-- Decompilation failed or script is empty"
     end
     
-    local rawSource = "-- Decompiled by HihiHub\n\n" .. source
+    rawSource = "-- Decompiled by HihiHub\n-- Script: " .. scriptObj.Name .. "\n\n" .. rawSource
 
     local function highlight(lua_code)
         lua_code = lua_code:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
-
         local colors = {
-            ["Keyword"] = "#F86D7C", -- 紅色
-            ["Global"]  = "#84D6F7", -- 藍色
-            ["String"]  = "#ADF195", -- 綠色
-            ["Comment"] = "#666666", -- 灰色
-            ["Number"]  = "#FFC600", -- 橘色
-            ["Normal"]  = "#CCCCCC"  -- 銀色
+            ["Keyword"] = "#F86D7C", ["Global"] = "#84D6F7", ["String"] = "#ADF195",
+            ["Comment"] = "#666666", ["Number"] = "#FFC600", ["Normal"] = "#CCCCCC"
         }
-
         local keywords = {
             ["and"]=true, ["break"]=true, ["do"]=true, ["else"]=true, ["elseif"]=true, 
             ["end"]=true, ["false"]=true, ["for"]=true, ["function"]=true, ["if"]=true, 
             ["in"]=true, ["local"]=true, ["nil"]=true, ["not"]=true, ["or"]=true, 
             ["repeat"]=true, ["return"]=true, ["then"]=true, ["true"]=true, ["until"]=true, ["while"]=true
         }
-        
         local globals = {
-            ["game"]=true, ["workspace"]=true, ["script"]=true, ["math"]=true, 
-            ["string"]=true, ["table"]=true, ["print"]=true, ["wait"]=true, 
-            ["require"]=true, ["Instance"]=true, ["Enum"]=true, ["Vector3"]=true, 
-            ["CFrame"]=true, ["Color3"]=true, ["UDim2"]=true, ["task"]=true
+            ["game"]=true, ["workspace"]=true, ["script"]=true, ["math"]=true, ["string"]=true, 
+            ["table"]=true, ["print"]=true, ["wait"]=true, ["require"]=true, ["Instance"]=true, 
+            ["Enum"]=true, ["Vector3"]=true, ["CFrame"]=true, ["Color3"]=true, ["UDim2"]=true, ["task"]=true
         }
-
-        local strings = {}
-        local comments = {}
+        local strings, comments = {}, {}
         
-        lua_code = lua_code:gsub("(%-%-[^\n]*)", function(c)
-            table.insert(comments, c)
-            return "\2_" .. #comments .. "_\2"
+        lua_code = lua_code:gsub("(%-%-[^\n]*)", function(c) table.insert(comments, c) return "\2_"..#comments.."_\2" end)
+        lua_code = lua_code:gsub("(\"[^\"]*\")", function(s) table.insert(strings, s) return "\1_"..#strings.."_\1" end)
+        lua_code = lua_code:gsub("('[^']*')", function(s) table.insert(strings, s) return "\1_"..#strings.."_\1" end)
+        lua_code = lua_code:gsub("([%w_]+)", function(w)
+            if keywords[w] then return '<font color="'..colors.Keyword..'">'..w..'</font>'
+            elseif globals[w] then return '<font color="'..colors.Global..'">'..w..'</font>'
+            end return w
         end)
-
-        lua_code = lua_code:gsub("(\"[^\"]*\")", function(s)
-            table.insert(strings, s)
-            return "\1_" .. #strings .. "_\1"
-        end)
-        lua_code = lua_code:gsub("('[^']*')", function(s)
-            table.insert(strings, s)
-            return "\1_" .. #strings .. "_\1"
-        end)
-
-        lua_code = lua_code:gsub("([%w_]+)", function(word)
-            if keywords[word] then
-                return '<font color="'..colors.Keyword..'">'..word..'</font>'
-            elseif globals[word] then
-                return '<font color="'..colors.Global..'">'..word..'</font>'
-            end
-            return word
-        end)
-        
         lua_code = lua_code:gsub("([^%w_])(%d+)([^%w_])", "%1<font color='"..colors.Number.."'>%2</font>%3")
-
-        lua_code = lua_code:gsub("\1_(%d+)_\1", function(id)
-            return '<font color="'..colors.String..'">'..strings[tonumber(id)]..'</font>'
-        end)
-
-        lua_code = lua_code:gsub("\2_(%d+)_\2", function(id)
-            return '<font color="'..colors.Comment..'">'..comments[tonumber(id)]..'</font>'
-        end)
-
+        lua_code = lua_code:gsub("\1_(%d+)_\1", function(id) return '<font color="'..colors.String..'">'..strings[tonumber(id)]..'</font>' end)
+        lua_code = lua_code:gsub("\2_(%d+)_\2", function(id) return '<font color="'..colors.Comment..'">'..comments[tonumber(id)]..'</font>' end)
         return lua_code
     end
 
@@ -1913,75 +1877,141 @@ function createScriptViewer(scriptObj)
     viewerGui.Parent = game:GetService("CoreGui")
     
     local frame = Instance.new("Frame", viewerGui)
-    frame.Size = UDim2.new(0, 600, 0, 400)
-    frame.Position = UDim2.new(0.5, -300, 0.5, -200)
-    frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    frame.Size = UDim2.new(0, 700, 0, 450)
+    frame.Position = UDim2.new(0.5, -350, 0.5, -225)
+    frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     frame.BorderSizePixel = 0
     frame.Active = true
     frame.Draggable = true
 
     local topBar = Instance.new("Frame", frame)
-    topBar.Size = UDim2.new(1, 0, 0, 30)
-    topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    topBar.Size = UDim2.new(1, 0, 0, 35)
+    topBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     
     local title = Instance.new("TextLabel", topBar)
-    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Size = UDim2.new(1, -250, 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "Script Viewer: " .. scriptObj.Name .. " | HihiHub"
+    title.Text = "Script: " .. scriptObj.Name
     title.TextColor3 = Color3.new(1, 1, 1)
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Font = Enum.Font.SourceSansBold
     title.TextSize = 16
 
+    local scroll = Instance.new("ScrollingFrame", frame)
+    scroll.Size = UDim2.new(1, 0, 1, -35)
+    scroll.Position = UDim2.new(0, 0, 0, 35)
+    scroll.CanvasSize = UDim2.new(0, 0, 10, 0)
+    scroll.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    scroll.ScrollBarThickness = 6
+    
+    local viewLabel = Instance.new("TextLabel", scroll)
+    viewLabel.Size = UDim2.new(1, -10, 1, 0)
+    viewLabel.Position = UDim2.new(0, 5, 0, 0)
+    viewLabel.BackgroundTransparency = 1
+    viewLabel.RichText = true
+    viewLabel.Text = highlight(rawSource)
+    viewLabel.TextColor3 = Color3.fromRGB(204, 204, 204)
+    viewLabel.TextXAlignment = Enum.TextXAlignment.Left
+    viewLabel.TextYAlignment = Enum.TextYAlignment.Top
+    viewLabel.Font = Enum.Font.Code
+    viewLabel.TextSize = 14
+    viewLabel.Visible = true 
+    local editBox = Instance.new("TextBox", scroll)
+    editBox.Size = UDim2.new(1, -10, 1, 0)
+    editBox.Position = UDim2.new(0, 5, 0, 0)
+    editBox.BackgroundTransparency = 1
+    editBox.Text = rawSource
+    editBox.TextColor3 = Color3.fromRGB(220, 220, 220)
+    editBox.TextXAlignment = Enum.TextXAlignment.Left
+    editBox.TextYAlignment = Enum.TextYAlignment.Top
+    editBox.Font = Enum.Font.Code
+    editBox.TextSize = 14
+    editBox.MultiLine = true
+    editBox.ClearTextOnFocus = false
+    editBox.Visible = false
+
+    local function updateCanvas(obj)
+        scroll.CanvasSize = UDim2.new(0, obj.TextBounds.X + 20, 0, obj.TextBounds.Y + 50)
+        obj.Size = UDim2.new(1, 0, 0, obj.TextBounds.Y + 50)
+    end
+    viewLabel:GetPropertyChangedSignal("TextBounds"):Connect(function() if viewLabel.Visible then updateCanvas(viewLabel) end end)
+    editBox:GetPropertyChangedSignal("TextBounds"):Connect(function() if editBox.Visible then updateCanvas(editBox) end end)
     local closeBtn = Instance.new("TextButton", topBar)
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -30, 0, 0)
+    closeBtn.Size = UDim2.new(0, 40, 1, 0)
+    closeBtn.Position = UDim2.new(1, -40, 0, 0)
     closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    closeBtn.BackgroundTransparency = 0.2
     closeBtn.Text = "X"
     closeBtn.TextColor3 = Color3.new(1, 1, 1)
     closeBtn.Font = Enum.Font.SourceSansBold
     closeBtn.TextSize = 18
-    closeBtn.MouseButton1Click:Connect(function()
-        viewerGui:Destroy()
-    end)
-
-    local scroll = Instance.new("ScrollingFrame", frame)
-    scroll.Size = UDim2.new(1, -10, 1, -40)
-    scroll.Position = UDim2.new(0, 5, 0, 35)
-    scroll.CanvasSize = UDim2.new(0, 0, 10, 0)
-    scroll.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    scroll.ScrollBarThickness = 8
-    
-    local codeBox = Instance.new("TextLabel", scroll)
-    codeBox.Size = UDim2.new(1, 0, 1, 0)
-    codeBox.BackgroundTransparency = 1
-    codeBox.RichText = true 
-    codeBox.Text = highlight(rawSource)
-    codeBox.TextColor3 = Color3.fromRGB(204, 204, 204)
-    codeBox.TextXAlignment = Enum.TextXAlignment.Left
-    codeBox.TextYAlignment = Enum.TextYAlignment.Top
-    codeBox.Font = Enum.Font.Code
-    codeBox.TextSize = 14
-    codeBox.TextWrapped = false
-
-    codeBox:GetPropertyChangedSignal("TextBounds"):Connect(function()
-        scroll.CanvasSize = UDim2.new(0, codeBox.TextBounds.X + 20, 0, codeBox.TextBounds.Y + 50)
-        codeBox.Size = UDim2.new(1, 0, 0, codeBox.TextBounds.Y + 50)
-    end)
-    
+    closeBtn.MouseButton1Click:Connect(function() viewerGui:Destroy() end)
     local copyBtn = Instance.new("TextButton", topBar)
-    copyBtn.Size = UDim2.new(0, 100, 0, 24)
-    copyBtn.Position = UDim2.new(1, -140, 0, 3)
+    copyBtn.Size = UDim2.new(0, 60, 1, -10)
+    copyBtn.Position = UDim2.new(1, -110, 0, 5)
     copyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    copyBtn.Text = "Copy to Clipboard"
+    copyBtn.Text = "Copy"
     copyBtn.TextColor3 = Color3.new(1,1,1)
+    copyBtn.Font = Enum.Font.SourceSans
+    copyBtn.TextSize = 14
     copyBtn.MouseButton1Click:Connect(function()
         if setclipboard then
-            setclipboard(rawSource)
+            setclipboard(editBox.Text)
             copyBtn.Text = "Copied!"
             wait(1)
-            copyBtn.Text = "Copy to Clipboard"
+            copyBtn.Text = "Copy"
+        end
+    end)
+
+    local execBtn = Instance.new("TextButton", topBar)
+    execBtn.Size = UDim2.new(0, 70, 1, -10)
+    execBtn.Position = UDim2.new(1, -190, 0, 5)
+    execBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    execBtn.Text = "Execute"
+    execBtn.TextColor3 = Color3.new(1,1,1)
+    execBtn.Font = Enum.Font.SourceSansBold
+    execBtn.TextSize = 14
+    execBtn.MouseButton1Click:Connect(function()
+        local code = editBox.Text
+        local loadFunc, err = loadstring(code)
+        if loadFunc then
+            task.spawn(loadFunc)
+            execBtn.Text = "Running!"
+            wait(1)
+            execBtn.Text = "Execute"
+        else
+            warn("Dex Execute Error: " .. tostring(err))
+            execBtn.Text = "Error!"
+            wait(1)
+            execBtn.Text = "Execute"
+        end
+    end)
+
+    local toggleBtn = Instance.new("TextButton", topBar)
+    toggleBtn.Size = UDim2.new(0, 60, 1, -10)
+    toggleBtn.Position = UDim2.new(1, -260, 0, 5)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+    toggleBtn.Text = "Edit"
+    toggleBtn.TextColor3 = Color3.new(1,1,1)
+    toggleBtn.Font = Enum.Font.SourceSans
+    toggleBtn.TextSize = 14
+
+    local isEditing = false
+    toggleBtn.MouseButton1Click:Connect(function()
+        isEditing = not isEditing
+        if isEditing then
+            toggleBtn.Text = "View"
+            viewLabel.Visible = false
+            editBox.Visible = true
+            editBox.Text = editBox.Text
+            updateCanvas(editBox)
+        else
+            toggleBtn.Text = "Edit"
+            editBox.Visible = false
+            viewLabel.Visible = true
+            viewLabel.Text = highlight(editBox.Text)
+            updateCanvas(viewLabel)
         end
     end)
 end
