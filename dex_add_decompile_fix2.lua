@@ -1842,16 +1842,17 @@ function createScriptViewer(scriptObj)
     end
     
     local rawSource = "-- Decompiled by HihiHub\n\n" .. source
+
     local function highlight(lua_code)
         lua_code = lua_code:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
 
         local colors = {
-            ["Keyword"] = "#F86D7C",
-            ["Global"]  = "#84D6F7",
-            ["String"]  = "#ADF195",
-            ["Comment"] = "#666666",
-            ["Number"]  = "#FFC600",
-            ["Normal"]  = "#CCCCCC"
+            ["Keyword"] = "#F86D7C", -- 紅色
+            ["Global"]  = "#84D6F7", -- 藍色
+            ["String"]  = "#ADF195", -- 綠色
+            ["Comment"] = "#666666", -- 灰色
+            ["Number"]  = "#FFC600", -- 橘色
+            ["Normal"]  = "#CCCCCC"  -- 銀色
         }
 
         local keywords = {
@@ -1873,16 +1874,16 @@ function createScriptViewer(scriptObj)
         
         lua_code = lua_code:gsub("(%-%-[^\n]*)", function(c)
             table.insert(comments, c)
-            return "\2" .. #comments .. "\2"
+            return "\2_" .. #comments .. "_\2"
         end)
 
         lua_code = lua_code:gsub("(\"[^\"]*\")", function(s)
             table.insert(strings, s)
-            return "\1" .. #strings .. "\1"
+            return "\1_" .. #strings .. "_\1"
         end)
         lua_code = lua_code:gsub("('[^']*')", function(s)
             table.insert(strings, s)
-            return "\1" .. #strings .. "\1"
+            return "\1_" .. #strings .. "_\1"
         end)
 
         lua_code = lua_code:gsub("([%w_]+)", function(word)
@@ -1896,11 +1897,11 @@ function createScriptViewer(scriptObj)
         
         lua_code = lua_code:gsub("([^%w_])(%d+)([^%w_])", "%1<font color='"..colors.Number.."'>%2</font>%3")
 
-        lua_code = lua_code:gsub("\1(%d+)\1", function(id)
+        lua_code = lua_code:gsub("\1_(%d+)_\1", function(id)
             return '<font color="'..colors.String..'">'..strings[tonumber(id)]..'</font>'
         end)
 
-        lua_code = lua_code:gsub("\2(%d+)\2", function(id)
+        lua_code = lua_code:gsub("\2_(%d+)_\2", function(id)
             return '<font color="'..colors.Comment..'">'..comments[tonumber(id)]..'</font>'
         end)
 
@@ -1956,13 +1957,13 @@ function createScriptViewer(scriptObj)
     codeBox.Size = UDim2.new(1, 0, 1, 0)
     codeBox.BackgroundTransparency = 1
     codeBox.RichText = true 
-    codeBox.Text = highlight(rawSource) 
-    codeBox.TextColor3 = Color3.fromRGB(204, 204, 204) 
+    codeBox.Text = highlight(rawSource)
+    codeBox.TextColor3 = Color3.fromRGB(204, 204, 204)
     codeBox.TextXAlignment = Enum.TextXAlignment.Left
     codeBox.TextYAlignment = Enum.TextYAlignment.Top
-    codeBox.Font = Enum.Font.Code 
+    codeBox.Font = Enum.Font.Code
     codeBox.TextSize = 14
-    codeBox.TextWrapped = false 
+    codeBox.TextWrapped = false
 
     codeBox:GetPropertyChangedSignal("TextBounds"):Connect(function()
         scroll.CanvasSize = UDim2.new(0, codeBox.TextBounds.X + 20, 0, codeBox.TextBounds.Y + 50)
@@ -1984,6 +1985,7 @@ function createScriptViewer(scriptObj)
         end
     end)
 end
+
 function f.rightClick()
 	rightClickContext:Clear()
 	
