@@ -3123,6 +3123,7 @@ local propControls = {
 
 		local function applyColor()
 			if not rBox or not gBox or not bBox then return end
+			
 			local r = tonumber(rBox.Text) or 0
 			local g = tonumber(gBox.Text) or 0
 			local b = tonumber(bBox.Text) or 0
@@ -3133,7 +3134,7 @@ local propControls = {
 			
 			local newColor = Color3.fromRGB(r, g, b)
 			
-			preview.BackgroundColor3 = newColor
+			if preview then preview.BackgroundColor3 = newColor end
 			
 			for i,v in pairs(explorerTree.Selection.List) do
 				pcall(function()
@@ -3148,35 +3149,51 @@ local propControls = {
 			mainFrame = frame
 			mainFrame.BackgroundTransparency = 1
 			
-			preview = CreateInstance("TextButton", {
+			preview = CreateInstance("Frame", {
 				Parent = frame,
 				Position = UDim2.new(0, 0, 0, 2),
-				Size = UDim2.new(0, 40, 0, 18),
+				Size = UDim2.new(0, 30, 0, 18),
 				BackgroundColor3 = Color3.new(1,1,1),
-				Text = "",
-				AutoButtonColor = false,
+				BorderSizePixel = 1,
 				BorderColor3 = Color3.new(0,0,0)
 			})
 			
+			local textProps = {
+				TextColor3 = Color3.new(0.8, 0.8, 0.8),
+				BackgroundTransparency = 1,
+				Font = Enum.Font.SourceSans,
+				TextSize = 14,
+				TextXAlignment = Enum.TextXAlignment.Right
+			}
 			
-			local rLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 45, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "R:", TextColor3 = Color3.new(1, 0.3, 0.3), BackgroundTransparency = 1, FontSize = 3})
+			local boxProps = {
+				TextColor3 = Color3.new(1, 1, 1),
+				BackgroundColor3 = Color3.new(0.15, 0.15, 0.15),
+				BorderColor3 = Color3.new(0.3, 0.3, 0.3),
+				Font = Enum.Font.SourceSans,
+				TextSize = 14,
+				ClearTextOnFocus = true
+			}
+
+			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 35, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "R:", TextColor3 = Color3.fromRGB(255, 100, 100), BackgroundTransparency = 1, Font = 3, TextSize = 14})
 			rBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 55, 0, 0), Size = UDim2.new(0, 30, 1, 0),
-				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+				Parent = frame, Position = UDim2.new(0, 48, 0, 2), Size = UDim2.new(0, 30, 0, 18),
+				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
 			})
 			
-			local gLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 90, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "G:", TextColor3 = Color3.new(0.3, 1, 0.3), BackgroundTransparency = 1, FontSize = 3})
+			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 83, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "G:", TextColor3 = Color3.fromRGB(100, 255, 100), BackgroundTransparency = 1, Font = 3, TextSize = 14})
 			gBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 100, 0, 0), Size = UDim2.new(0, 30, 1, 0),
-				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+				Parent = frame, Position = UDim2.new(0, 96, 0, 2), Size = UDim2.new(0, 30, 0, 18),
+				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
 			})
 			
-			local bLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 135, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "B:", TextColor3 = Color3.new(0.3, 0.5, 1), BackgroundTransparency = 1, FontSize = 3})
+			CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 131, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "B:", TextColor3 = Color3.fromRGB(100, 100, 255), BackgroundTransparency = 1, Font = 3, TextSize = 14})
 			bBox = CreateInstance("TextBox", {
-				Parent = frame, Position = UDim2.new(0, 145, 0, 0), Size = UDim2.new(0, 30, 1, 0),
-				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+				Parent = frame, Position = UDim2.new(0, 144, 0, 2), Size = UDim2.new(0, 30, 0, 18),
+				Text = "255", TextColor3 = boxProps.TextColor3, BackgroundColor3 = boxProps.BackgroundColor3, BorderColor3 = boxProps.BorderColor3, Font = 3, TextSize = 14
 			})
 
+			-- 事件綁定：當輸入完成或失去焦點時，更新顏色
 			local function onFocusLost()
 				isFocusing = false
 				applyColor()
@@ -3194,7 +3211,7 @@ local propControls = {
 
 		local function update(self, value)
 			if not preview or isFocusing then return end
-			-- 更新顯示 (將 0-1 的小數轉換為 0-255 的整數顯示，方便閱讀)
+			
 			local r = math.floor(value.R * 255 + 0.5)
 			local g = math.floor(value.G * 255 + 0.5)
 			local b = math.floor(value.B * 255 + 0.5)
