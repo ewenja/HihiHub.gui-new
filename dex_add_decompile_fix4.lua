@@ -3116,6 +3116,98 @@ local propControls = {
 		newMt.Focus = focus
 		return newMt
 	end,
+["Color3"] = function(prop, child)
+		local newMt = setmetatable({},{})
+		local mainFrame, preview, rBox, gBox, bBox
+		local isFocusing = false
+
+		local function applyColor()
+			if not rBox or not gBox or not bBox then return end
+			local r = tonumber(rBox.Text) or 0
+			local g = tonumber(gBox.Text) or 0
+			local b = tonumber(bBox.Text) or 0
+			
+			r = math.clamp(r, 0, 255)
+			g = math.clamp(g, 0, 255)
+			b = math.clamp(b, 0, 255)
+			
+			local newColor = Color3.fromRGB(r, g, b)
+			
+			preview.BackgroundColor3 = newColor
+			
+			for i,v in pairs(explorerTree.Selection.List) do
+				pcall(function()
+					if v:IsA(prop.Class) then
+						v[prop.Name] = newColor
+					end
+				end)
+			end
+		end
+
+		local function setup(self, frame)
+			mainFrame = frame
+			mainFrame.BackgroundTransparency = 1
+			
+			preview = CreateInstance("TextButton", {
+				Parent = frame,
+				Position = UDim2.new(0, 0, 0, 2),
+				Size = UDim2.new(0, 40, 0, 18),
+				BackgroundColor3 = Color3.new(1,1,1),
+				Text = "",
+				AutoButtonColor = false,
+				BorderColor3 = Color3.new(0,0,0)
+			})
+			
+			
+			local rLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 45, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "R:", TextColor3 = Color3.new(1, 0.3, 0.3), BackgroundTransparency = 1, FontSize = 3})
+			rBox = CreateInstance("TextBox", {
+				Parent = frame, Position = UDim2.new(0, 55, 0, 0), Size = UDim2.new(0, 30, 1, 0),
+				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+			})
+			
+			local gLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 90, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "G:", TextColor3 = Color3.new(0.3, 1, 0.3), BackgroundTransparency = 1, FontSize = 3})
+			gBox = CreateInstance("TextBox", {
+				Parent = frame, Position = UDim2.new(0, 100, 0, 0), Size = UDim2.new(0, 30, 1, 0),
+				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+			})
+			
+			local bLabel = CreateInstance("TextLabel", {Parent = frame, Position = UDim2.new(0, 135, 0, 0), Size = UDim2.new(0, 10, 1, 0), Text = "B:", TextColor3 = Color3.new(0.3, 0.5, 1), BackgroundTransparency = 1, FontSize = 3})
+			bBox = CreateInstance("TextBox", {
+				Parent = frame, Position = UDim2.new(0, 145, 0, 0), Size = UDim2.new(0, 30, 1, 0),
+				Text = "255", TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, FontSize = 3
+			})
+
+			local function onFocusLost()
+				isFocusing = false
+				applyColor()
+			end
+			
+			local function onFocused()
+				isFocusing = true
+			end
+
+			rBox.FocusLost:Connect(onFocusLost) rBox.Focused:Connect(onFocused)
+			gBox.FocusLost:Connect(onFocusLost) gBox.Focused:Connect(onFocused)
+			bBox.FocusLost:Connect(onFocusLost) bBox.Focused:Connect(onFocused)
+		end
+		newMt.Setup = setup
+
+		local function update(self, value)
+			if not preview or isFocusing then return end
+			-- 更新顯示 (將 0-1 的小數轉換為 0-255 的整數顯示，方便閱讀)
+			local r = math.floor(value.R * 255 + 0.5)
+			local g = math.floor(value.G * 255 + 0.5)
+			local b = math.floor(value.B * 255 + 0.5)
+			
+			preview.BackgroundColor3 = value
+			rBox.Text = tostring(r)
+			gBox.Text = tostring(g)
+			bBox.Text = tostring(b)
+		end	
+		newMt.Update = update
+	
+		return newMt
+	end,
 	["Vector3"] = function(prop,child)
 		local newMt = setmetatable({},{})
 	
