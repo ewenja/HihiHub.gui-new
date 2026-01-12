@@ -2177,10 +2177,7 @@ function f.rightClick()
 			print("JUMP TO PLAYER")
 			rightClickContext:Hide()
 		end})
-	end
-	-- [INSERT THIS CODE BLOCK] 插入這段代碼 ---
-    
-    -- 檢查是否為腳本類型 (LocalScript 或 ModuleScript)
+	end    
     if f.tabIsA(selection.List, "LocalScript") or f.tabIsA(selection.List, "ModuleScript") or f.tabIsA(selection.List, "Script") then
         rightClickContext:AddDivider()
         
@@ -2191,7 +2188,6 @@ function f.rightClick()
             Shortcut = "", 
             Disabled = #selection.List == 0, 
             OnClick = function()
-                -- 取得當前選中的第一個腳本
                 local obj = selection.List[1]
                 if obj then
                     createScriptViewer(obj)
@@ -2240,7 +2236,7 @@ function f.newExplorer()
 		for i,v in pairs(nameEvents) do v:Disconnect() nameEvents[i] = nil end
 	end
 	
-	newTree.NodeCreate = function(self,entry,i)
+newTree.NodeCreate = function(self,entry,i)
 		entry.Indent.IconFrame.Icon.Image = iconMap
 		
 		entry.MouseEnter:Connect(function()
@@ -2258,6 +2254,7 @@ function f.newExplorer()
 				entry.BackgroundTransparency = 1
 			end
 		end)						
+		
 		local lastClick = 0
 
 		entry.MouseButton1Down:Connect(function()
@@ -2278,6 +2275,22 @@ function f.newExplorer()
 			self:Refresh()
 			propertiesTree:TreeUpdate()
 			propertiesTree:Refresh()
+		end)
+
+		entry.MouseButton2Down:Connect(function()
+			local node = self.Tree[i + self.Index]
+			rightEntry = entry
+			rightClickContext.Frame.Parent = nil
+			if not self.Selection.Selected[node.Obj] then
+				self.Selection:Set({node.Obj})
+			end
+			self:Refresh()
+		end)
+
+		entry.MouseButton2Up:Connect(function()
+			if rightEntry and f.checkMouseInGui(rightEntry) then
+				f.rightClick()
+			end
 		end)
 						
 		entry.Indent.Expand.MouseEnter:Connect(function()
